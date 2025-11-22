@@ -127,6 +127,11 @@ const DataManager = {
         return Array.from(this.contentMap.values());
     },
     
+    // Alias for getAll (for consistency)
+    getAllContent() {
+        return this.getAll();
+    },
+    
     // Filter content by category/industry
     getByCategory(category, limit = 50) {
         const results = [];

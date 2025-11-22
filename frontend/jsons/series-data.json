@@ -266,6 +266,7 @@
   "id": "tt282985392",
   "title": "Breathless (Season 2)",
   "year": "2024\u2013",
+  "season": "2",
   "image": "https://i.ibb.co/kgt8YvmS/Breathless.jpg",
   "description": "Biel, a resident at a public hospital, has spent months dedicating his life to becoming a doctor. A general strike protesting cuts to public health Biel and residents consider supporting the strike, which could have fatal conseque...",
   "genres": [
@@ -23905,6 +23906,7 @@
   "id": "tt4574334",
   "title": "Stranger Things (Season 1)",
   "year": "2016\u20132025",
+  "season": "1",
   "image": "https://i.ibb.co/zfwKdWG/stranger-things.jpg",
   "description": "In 1980s Indiana, a group of young friends witness supernatural forces and secret government exploits. As they search for answers, the children unravel a series of extraordinary mysteries.",
   "genres": [
@@ -24048,6 +24050,7 @@
 {
   "id": "tt45743342",
   "title": "Stranger Things (Season 2)",
+  "season": "2",
   "year": "2016\u20132025",
   "image": "https://i.postimg.cc/Zqvp4XGz/stranger-things-2.jpg",
   "description": "In 1980s Indiana, a group of young friends witness supernatural forces and secret government exploits. As they search for answers, the children unravel a series of extraordinary mysteries.",
@@ -24208,6 +24211,7 @@
   "id": "tt45743343",
   "title": "Stranger Things (Season 3)",
   "year": "2016\u20132025",
+  "season": "3",
   "image": "https://i.postimg.cc/T34n8THc/stranger-things-3.jpg",
   "description": "In 1980s Indiana, a group of young friends witness supernatural forces and secret government exploits. As they search for answers, the children unravel a series of extraordinary mysteries.",
   "genres": [
@@ -24352,6 +24356,7 @@
   "id": "tt45743344",
   "title": "Stranger Things (Season 4)",
   "year": "2016\u20132025",
+  "season": "4",
   "image": "https://i.postimg.cc/MTkRTdwM/stranger-things-4.jpg",
   "description": "In 1980s Indiana, a group of young friends witness supernatural forces and secret government exploits. As they search for answers, the children unravel a series of extraordinary mysteries.",
   "genres": [
@@ -25894,6 +25899,7 @@
   "id": "tt0108778",
   "title": "Friends (Season 1)",
   "year": "1994\u20132004",
+  "season": "1",
   "image": "https://i.ibb.co/qgBCHP3/Friends-F-R-I-E-N-D-S-poster.jpg",
   "description": "Follows the personal and professional lives of six twenty to thirty year-old friends living in the Manhattan borough of New York City.",
   "genres": [
@@ -26276,6 +26282,7 @@
 {
   "id": "tt01087782",
   "title": "Friends (Season 2)",
+  "season": "2",
   "year": "1994\u20132004",
   "image": "https://i.ibb.co/qgBCHP3/Friends-F-R-I-E-N-D-S-poster.jpg",
   "description": "Follows the personal and professional lives of six twenty to thirty year-old friends living in the Manhattan borough of New York City.",
@@ -26657,6 +26664,7 @@
 {
   "id": "tt01087783",
   "title": "Friends (Season 3)",
+  "season": "3",
   "year": "1994\u20132004",
   "image": "https://i.ibb.co/qgBCHP3/Friends-F-R-I-E-N-D-S-poster.jpg",
   "description": "Follows the personal and professional lives of six twenty to thirty year-old friends living in the Manhattan borough of New York City.",
@@ -27055,6 +27063,7 @@
 {
   "id": "tt01087784",
   "title": "Friends (Season 4)",
+  "season": "4",
   "year": "1994\u20132004",
   "image": "https://i.ibb.co/qgBCHP3/Friends-F-R-I-E-N-D-S-poster.jpg",
   "description": "Follows the personal and professional lives of six twenty to thirty year-old friends living in the Manhattan borough of New York City.",
@@ -27438,6 +27447,7 @@
 {
   "id": "tt01087785",
   "title": "Friends (Season 5)",
+  "season": "5",
   "year": "1994\u20132004",
   "image": "https://i.ibb.co/qgBCHP3/Friends-F-R-I-E-N-D-S-poster.jpg",
   "description": "Follows the personal and professional lives of six twenty to thirty year-old friends living in the Manhattan borough of New York City.",
@@ -27821,6 +27831,7 @@
 {
   "id": "tt01087786",
   "title": "Friends (Season 6)",
+  "season": "6",
   "year": "1994\u20132004",
   "image": "https://i.ibb.co/qgBCHP3/Friends-F-R-I-E-N-D-S-poster.jpg",
   "description": "Follows the personal and professional lives of six twenty to thirty year-old friends living in the Manhattan borough of New York City.",
@@ -28219,6 +28230,7 @@
 {
   "id": "tt01087787",
   "title": "Friends (Season 7)",
+  "season": "7",
   "year": "1994\u20132004",
   "image": "https://i.ibb.co/qgBCHP3/Friends-F-R-I-E-N-D-S-poster.jpg",
   "description": "Follows the personal and professional lives of six twenty to thirty year-old friends living in the Manhattan borough of New York City.",
@@ -28554,6 +28566,7 @@
 {
   "id": "tt01087788",
   "title": "Friends (Season 8)",
+  "season": "8",
   "year": "1994\u20132004",
   "image": "https://i.ibb.co/qgBCHP3/Friends-F-R-I-E-N-D-S-poster.jpg",
   "description": "Follows the personal and professional lives of six twenty to thirty year-old friends living in the Manhattan borough of New York City.",
@@ -28889,6 +28902,7 @@
 {
   "id": "tt01087789",
   "title": "Friends (Season 9)",
+  "season": "9",
   "year": "1994\u20132004",
   "image": "https://i.ibb.co/qgBCHP3/Friends-F-R-I-E-N-D-S-poster.jpg",
   "description": "Follows the personal and professional lives of six twenty to thirty year-old friends living in the Manhattan borough of New York City.",
@@ -29211,6 +29225,7 @@
 {
   "id": "tt010877810",
   "title": "Friends (Season 10)",
+  "season": "10",
   "year": "1994\u20132004",
   "image": "https://i.ibb.co/qgBCHP3/Friends-F-R-I-E-N-D-S-poster.jpg",
   "description": "Follows the personal and professional lives of six twenty to thirty year-old friends living in the Manhattan borough of New York City.",

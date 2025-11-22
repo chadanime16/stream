@@ -72,6 +72,85 @@ async function loadContentDetail() {
     }
 }
 
+// Get related seasons for a series
+function getRelatedSeasons(content) {
+    // Only proceed if content has a season field
+    if (!content.season) {
+        return [];
+    }
+    
+    // Extract base ID (remove last 1-2 digits from ID)
+    const baseId = content.id.replace(/\d{1,2}$/, '');
+    
+    // Get all content from DataManager
+    const allContent = DataManager.getAllContent();
+    
+    // Find all series with similar ID pattern and season field
+    const relatedSeasons = allContent.filter(item => {
+        // Must have season field
+        if (!item.season) return false;
+        
+        // Check if ID starts with base ID
+        const itemBaseId = item.id.replace(/\d{1,2}$/, '');
+        if (itemBaseId !== baseId) return false;
+        
+        return true;
+    });
+    
+    // Sort by season number
+    relatedSeasons.sort((a, b) => {
+        const seasonA = parseInt(a.season) || 0;
+        const seasonB = parseInt(b.season) || 0;
+        return seasonA - seasonB;
+    });
+    
+    return relatedSeasons;
+}
+
+// Get content recommendations
+function getRecommendations(content, limit = 9) {
+    const allContent = DataManager.getAllContent();
+    
+    // Calculate similarity score for each content
+    const scored = allContent
+        .filter(item => item.id !== content.id) // Exclude current content
+        .map(item => {
+            let score = 0;
+            
+            // Genre matching (most important) - +3 per matching genre
+            const contentGenres = Array.isArray(content.genres) ? content.genres : [];
+            const itemGenres = Array.isArray(item.genres) ? item.genres : [];
+            const matchingGenres = contentGenres.filter(g => itemGenres.includes(g));
+            score += matchingGenres.length * 3;
+            
+            // Same industry - +2
+            if (content.industry && item.industry && content.industry === item.industry) {
+                score += 2;
+            }
+            
+            // Rating similarity - +1 if within ±1.0 range
+            if (content.rating && item.rating) {
+                const contentRating = parseFloat(content.rating);
+                const itemRating = parseFloat(item.rating);
+                if (Math.abs(contentRating - itemRating) <= 1.0) {
+                    score += 1;
+                }
+            }
+            
+            // Same type (series/movie) - +1
+            if (content.type && item.type && content.type === item.type) {
+                score += 1;
+            }
+            
+            return { content: item, score };
+        })
+        .filter(item => item.score > 0) // Only items with some similarity
+        .sort((a, b) => b.score - a.score) // Sort by score (highest first)
+        .slice(0, limit); // Take top N items
+    
+    return scored.map(item => item.content);
+}
+
 // Display content information
 function displayContentInfo(content) {
     const container = document.getElementById('detailContainer');
@@ -160,6 +239,12 @@ function displayContentInfo(content) {
         </div>
     `;
     
+    // Display related seasons if available
+    displayRelatedSeasons(content);
+    
+    // Display recommendations
+    displayRecommendations(content);
+    
     // Setup action buttons
     document.getElementById('playBtn').onclick = () => {
         scrollToPlayer();
@@ -167,6 +252,89 @@ function displayContentInfo(content) {
     
     // Setup watchlist button with toggle functionality
     setupWatchlistButton(content.id);
+}
+
+// Display related seasons
+function displayRelatedSeasons(content) {
+    const relatedSeasons = getRelatedSeasons(content);
+    
+    // Only show if there are multiple seasons
+    if (relatedSeasons.length <= 1) {
+        return;
+    }
+    
+    const container = document.getElementById('detailContainer');
+    
+    const seasonsHtml = `
+        <div class="seasons-section">
+            <h3>More Seasons</h3>
+            <div class="seasons-grid">
+                ${relatedSeasons.map(season => {
+                    const isCurrentSeason = season.id === content.id;
+                    const episodes = Array.isArray(season.episodes) ? season.episodes : [];
+                    return `
+                        <div class="season-card ${isCurrentSeason ? 'active' : ''}" 
+                             onclick="${isCurrentSeason ? '' : `window.location.href='detail.html?id=${season.id}'`}"
+                             style="${isCurrentSeason ? 'cursor: default;' : 'cursor: pointer;'}">
+                            <div class="season-card-header">
+                                <span class="season-number">Season ${season.season}</span>
+                                ${isCurrentSeason ? '<span class="current-badge">Current</span>' : ''}
+                            </div>
+                            <div class="season-card-info">
+                                <p class="season-year">${season.year || 'N/A'}</p>
+                                <p class="season-episodes">${episodes.length} Episode${episodes.length !== 1 ? 's' : ''}</p>
+                            </div>
+                        </div>
+                    `;
+                }).join('')}
+            </div>
+        </div>
+    `;
+    
+    container.insertAdjacentHTML('beforeend', seasonsHtml);
+}
+
+// Display recommendations
+function displayRecommendations(content) {
+    const recommendations = getRecommendations(content, 9);
+    
+    if (recommendations.length === 0) {
+        return;
+    }
+    
+    const container = document.getElementById('recommendationsContainer');
+    
+    const recommendationsHtml = `
+        <div class="recommendations-section">
+            <h3>You May Also Like</h3>
+            <div class="recommendations-grid">
+                ${recommendations.map(item => {
+                    const genres = Array.isArray(item.genres) ? item.genres.slice(0, 2) : [];
+                    const genreTags = genres.map(g => `<span class="genre-tag">${g}</span>`).join('');
+                    
+                    return `
+                        <div class="recommendation-card" onclick="window.location.href='detail.html?id=${item.id}'">
+                            ${item.rating ? `<div class="recommendation-card-rating">⭐ ${item.rating}</div>` : ''}
+                            <img src="${item.image || 'https://via.placeholder.com/350x200?text=No+Image'}" 
+                                 alt="${item.title}" 
+                                 class="recommendation-card-image"
+                                 onerror="this.src='https://via.placeholder.com/350x200?text=No+Image'">
+                            <div class="recommendation-card-info">
+                                <h4 class="recommendation-card-title">${item.title}</h4>
+                                <div class="recommendation-card-meta">
+                                    ${item.year ? `<span>${item.year}</span>` : ''}
+                                    ${item.duration ? `<span>${item.duration}</span>` : ''}
+                                </div>
+                                ${genreTags ? `<div class="recommendation-card-genres">${genreTags}</div>` : ''}
+                            </div>
+                        </div>
+                    `;
+                }).join('')}
+            </div>
+        </div>
+    `;
+    
+    container.innerHTML = recommendationsHtml;
 }
 
 // Setup watchlist button

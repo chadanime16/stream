@@ -277,6 +277,179 @@
     gap: 0.5rem;
 }
 
+/* Seasons Section */
+.seasons-section {
+    margin-top: 3rem;
+    padding: 2rem;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+}
+
+.seasons-section h3 {
+    font-size: 1.5rem;
+    margin-bottom: 1.5rem;
+    color: var(--text-primary);
+}
+
+.seasons-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 1rem;
+}
+
+.season-card {
+    background: var(--bg-tertiary);
+    border: 2px solid var(--border-color);
+    border-radius: 12px;
+    padding: 1.5rem;
+    transition: all 0.3s ease;
+}
+
+.season-card:not(.active):hover {
+    border-color: var(--accent-primary);
+    transform: translateY(-4px);
+    box-shadow: 0 8px 20px rgba(255, 51, 51, 0.2);
+}
+
+.season-card.active {
+    background: linear-gradient(135deg, rgba(255, 51, 51, 0.15), rgba(255, 107, 53, 0.15));
+    border-color: var(--accent-primary);
+}
+
+.season-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.season-number {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.current-badge {
+    background: var(--accent-primary);
+    color: var(--bg-primary);
+    padding: 0.25rem 0.75rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.season-card-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.season-year {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.season-episodes {
+    color: var(--accent-secondary);
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+/* Recommendations Container */
+.recommendations-container {
+    max-width: 1400px;
+    margin: 3rem auto 4rem;
+    padding: 0 2rem;
+}
+
+/* Recommendations Section */
+.recommendations-section {
+    padding: 2rem;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+}
+
+.recommendations-section h3 {
+    font-size: 1.5rem;
+    margin-bottom: 1.5rem;
+    color: var(--text-primary);
+}
+
+.recommendations-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1.5rem;
+}
+
+.recommendation-card {
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.recommendation-card:hover {
+    border-color: var(--accent-primary);
+    transform: translateY(-4px);
+    box-shadow: 0 8px 20px rgba(255, 51, 51, 0.3);
+}
+
+.recommendation-card-rating {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    background: rgba(0, 0, 0, 0.9);
+    padding: 0.3rem 0.6rem;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: var(--accent-secondary);
+    z-index: 5;
+}
+
+.recommendation-card-image {
+    width: 100%;
+    height: 180px;
+    object-fit: cover;
+    display: block;
+}
+
+.recommendation-card-info {
+    padding: 1rem;
+}
+
+.recommendation-card-title {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: var(--text-primary);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    line-height: 1.4;
+    min-height: 2.8em;
+}
+
+.recommendation-card-meta {
+    display: flex;
+    gap: 0.75rem;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    margin-bottom: 0.5rem;
+}
+
+.recommendation-card-genres {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
     .detail-header {
@@ -303,5 +476,18 @@
     
     .episode-buttons {
         grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    }
+    
+    .seasons-grid {
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    }
+    
+    .recommendations-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .seasons-section,
+    .recommendations-section {
+        padding: 1.5rem;
     }
 }
