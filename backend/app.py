@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, send_from_directory
+from flask import Flask, request, jsonify
 from flask_cors import CORS
 import sqlite3
 import jwt
@@ -11,7 +11,8 @@ from functools import wraps
 import threading
 import glob
 
-app = Flask(__name__, static_folder='../frontend', static_url_path='')
+app = Flask(__name__)
+# CORS enabled for all origins - frontend will be hosted separately
 CORS(app, resources={r"/*": {"origins": "*"}})
 
 # Configuration
@@ -218,16 +219,8 @@ def parse_json_field(value, default=None):
     except json.JSONDecodeError:
         return default or []
 
-# ============= ROUTES =============
-
-# Serve frontend
-@app.route('/')
-def serve_index():
-    return send_from_directory(app.static_folder, 'index.html')
-
-@app.route('/<path:path>')
-def serve_static(path):
-    return send_from_directory(app.static_folder, path)
+# ============= API ROUTES =============
+# Note: Frontend will be hosted separately and call these APIs
 
 # Auth Routes
 @app.route('/api/auth/signup', methods=['POST'])

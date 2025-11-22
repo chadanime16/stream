@@ -2,8 +2,9 @@
 
 // Wait for DataManager to load
 let dataLoaded = false;
+let searchTimeout = null;
 
-// Create content card HTML
+// Create content card HTML (horizontal/landscape image)
 function createContentCard(content) {
     const card = document.createElement('div');
     card.className = 'content-card';
@@ -16,10 +17,10 @@ function createContentCard(content) {
     
     card.innerHTML = `
         ${content.rating ? `<div class="content-card-rating">⭐ ${content.rating}</div>` : ''}
-        <img src="${content.image || 'https://via.placeholder.com/280x400?text=No+Image'}" 
+        <img src="${content.image || 'https://via.placeholder.com/350x200?text=No+Image'}" 
              alt="${content.title}" 
              class="content-card-image" 
-             onerror="this.src='https://via.placeholder.com/280x400?text=No+Image'">
+             onerror="this.src='https://via.placeholder.com/350x200?text=No+Image'">
         <div class="content-card-info">
             <h4 class="content-card-title">${content.title}</h4>
             <div class="content-card-meta">
@@ -31,6 +32,37 @@ function createContentCard(content) {
     `;
     
     return card;
+}
+
+// Add navigation arrows to slider
+function addSliderNavigation(sliderId) {
+    const slider = document.getElementById(sliderId);
+    if (!slider) return;
+    
+    const row = slider.closest('.content-row');
+    if (!row) return;
+    
+    // Check if arrows already exist
+    if (row.querySelector('.slider-nav')) return;
+    
+    // Create prev button
+    const prevBtn = document.createElement('button');
+    prevBtn.className = 'slider-nav prev';
+    prevBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>';
+    prevBtn.onclick = () => {
+        slider.scrollBy({ left: -400, behavior: 'smooth' });
+    };
+    
+    // Create next button
+    const nextBtn = document.createElement('button');
+    nextBtn.className = 'slider-nav next';
+    nextBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>';
+    nextBtn.onclick = () => {
+        slider.scrollBy({ left: 400, behavior: 'smooth' });
+    };
+    
+    row.appendChild(prevBtn);
+    row.appendChild(nextBtn);
 }
 
 // Load content into slider
@@ -48,6 +80,9 @@ function loadSlider(sliderId, contents) {
     contents.forEach(content => {
         slider.appendChild(createContentCard(content));
     });
+    
+    // Add navigation arrows
+    addSliderNavigation(sliderId);
 }
 
 // Load hero section
@@ -158,36 +193,101 @@ async function loadContent() {
     }
 }
 
-// Search functionality
+// Create search modal
+function createSearchModal() {
+    const modal = document.createElement('div');
+    modal.id = 'searchModal';
+    modal.className = 'search-modal';
+    modal.innerHTML = `
+        <div class="search-modal-header">
+            <h2 id="searchModalTitle">Search Results</h2>
+            <button class="search-modal-close" id="searchModalClose">&times;</button>
+        </div>
+        <div class="search-modal-content">
+            <div class="search-results-grid" id="searchResults"></div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+    
+    // Close modal
+    document.getElementById('searchModalClose').onclick = () => {
+        modal.classList.remove('show');
+    };
+    
+    // Close on background click
+    modal.onclick = (e) => {
+        if (e.target === modal) {
+            modal.classList.remove('show');
+        }
+    };
+}
+
+// Show search results in modal
+function showSearchResults(results, query) {
+    const modal = document.getElementById('searchModal');
+    const title = document.getElementById('searchModalTitle');
+    const resultsContainer = document.getElementById('searchResults');
+    
+    title.textContent = `Search: "${query}" (${results.length} results)`;
+    resultsContainer.innerHTML = '';
+    
+    if (results.length === 0) {
+        resultsContainer.innerHTML = '<p style="color: var(--text-muted); text-align: center; padding: 2rem;">No results found</p>';
+    } else {
+        results.forEach(content => {
+            resultsContainer.appendChild(createContentCard(content));
+        });
+    }
+    
+    modal.classList.add('show');
+}
+
+// Search functionality with real-time search
 function setupSearch() {
     const searchInput = document.getElementById('searchInput');
     const searchBtn = document.getElementById('searchBtn');
     
     function performSearch() {
         const query = searchInput.value.trim();
-        if (!query) return;
+        if (!query) {
+            // Close modal if search is empty
+            document.getElementById('searchModal').classList.remove('show');
+            return;
+        }
         
         try {
             // Search in local data
             const results = DataManager.search(query);
             
-            // Show results in a modal or redirect to search page
-            // For now, show in trending section
-            if (results && results.length > 0) {
-                loadSlider('trendingSlider', results);
-                document.querySelector('.row-header h3').textContent = `🔍 Search: "${query}"`;
-                showToast(`Found ${results.length} results`, 'success');
-            } else {
-                showToast('No results found', 'error');
-            }
+            // Show results in modal
+            showSearchResults(results, query);
         } catch (error) {
-            showToast('Search failed', 'error');
+            console.error('Search error:', error);
         }
     }
     
+    // Real-time search as user types (with debounce)
+    searchInput.addEventListener('input', (e) => {
+        // Clear previous timeout
+        if (searchTimeout) {
+            clearTimeout(searchTimeout);
+        }
+        
+        // Set new timeout for debounce (300ms)
+        searchTimeout = setTimeout(() => {
+            performSearch();
+        }, 300);
+    });
+    
+    // Search on button click
     searchBtn.addEventListener('click', performSearch);
+    
+    // Search on Enter key
     searchInput.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') {
+            if (searchTimeout) {
+                clearTimeout(searchTimeout);
+            }
             performSearch();
         }
     });
@@ -249,7 +349,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     setupSearch();
     setupMyList();
     
-    // Load all JSON data into memory first
+    // Create search modal
+    createSearchModal();
+    
+    // Load all JSON data into memory first (with localStorage caching)
     console.log('🚀 Loading content data...');
     await DataManager.loadAllData();
     dataLoaded = true;

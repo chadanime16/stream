@@ -1,7 +1,8 @@
 /* Detail Page Styles */
+
 .detail-container {
     max-width: 1400px;
-    margin: 120px auto 2rem;
+    margin: 100px auto 2rem;
     padding: 0 2rem;
 }
 
@@ -14,62 +15,58 @@
 
 .detail-header {
     display: grid;
-    grid-template-columns: 400px 1fr;
+    grid-template-columns: 300px 1fr;
     gap: 3rem;
     margin-bottom: 3rem;
 }
 
 .detail-poster {
     width: 100%;
-    border-radius: 16px;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    border-radius: 12px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
 }
 
 .detail-info h1 {
-    font-size: 3rem;
+    font-size: 2.5rem;
     margin-bottom: 1rem;
-    line-height: 1.2;
 }
 
 .detail-meta {
     display: flex;
-    gap: 2rem;
-    margin-bottom: 1.5rem;
+    gap: 1.5rem;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+}
+
+.detail-meta span {
     color: var(--text-secondary);
-    font-size: 1.1rem;
+    font-size: 0.95rem;
 }
 
 .detail-rating {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    background: var(--bg-tertiary);
-    padding: 0.5rem 1rem;
-    border-radius: 8px;
+    color: var(--accent-secondary) !important;
     font-weight: 600;
-    color: var(--accent-secondary);
 }
 
 .detail-genres {
     display: flex;
-    gap: 0.75rem;
+    gap: 0.5rem;
     flex-wrap: wrap;
     margin-bottom: 1.5rem;
 }
 
 .genre-badge {
-    padding: 0.5rem 1.5rem;
-    background: linear-gradient(135deg, rgba(0, 217, 255, 0.1), rgba(0, 255, 198, 0.1));
-    border: 1px solid rgba(0, 217, 255, 0.3);
-    border-radius: 25px;
-    font-weight: 500;
-    color: var(--accent-primary);
+    padding: 0.5rem 1rem;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
 }
 
 .detail-description {
-    font-size: 1.1rem;
-    line-height: 1.8;
     color: var(--text-secondary);
+    line-height: 1.8;
     margin-bottom: 2rem;
 }
 
@@ -79,14 +76,9 @@
     margin-bottom: 2rem;
 }
 
-.detail-cast {
-    margin-top: 2rem;
-}
-
 .detail-cast h3 {
-    font-size: 1.3rem;
+    font-size: 1.2rem;
     margin-bottom: 1rem;
-    color: var(--text-secondary);
 }
 
 .cast-list {
@@ -97,28 +89,80 @@
 
 .cast-item {
     padding: 0.5rem 1rem;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+/* Download Links Section */
+.detail-downloads {
+    margin-top: 2rem;
+    padding: 1.5rem;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+}
+
+.detail-downloads h3 {
+    font-size: 1.2rem;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.download-links {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1rem;
+}
+
+.download-link {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 1rem;
     background: var(--bg-tertiary);
     border: 1px solid var(--border-color);
     border-radius: 8px;
-    color: var(--text-secondary);
+    text-decoration: none;
+    color: var(--text-primary);
+    transition: all 0.3s ease;
+}
+
+.download-link:hover {
+    background: var(--bg-primary);
+    border-color: var(--accent-primary);
+    transform: translateY(-2px);
+}
+
+.download-link-name {
+    font-weight: 500;
+}
+
+.download-link svg {
+    width: 20px;
+    height: 20px;
+    color: var(--accent-primary);
 }
 
 /* Player Section */
 .player-section {
     max-width: 1400px;
-    margin: 2rem auto;
+    margin: 0 auto 2rem;
     padding: 0 2rem;
 }
 
 .player-container {
     position: relative;
-    width: 100%;
-    padding-bottom: 56.25%; /* 16:9 Aspect Ratio */
-    background: #000;
-    border-radius: 16px;
+    padding-bottom: 56.25%;
+    height: 0;
     overflow: hidden;
+    border-radius: 12px;
+    background: #000;
     margin-bottom: 2rem;
-    box-shadow: 0 20px 60px rgba(0, 217, 255, 0.2);
 }
 
 .player-container iframe {
@@ -132,17 +176,12 @@
 
 /* Source Selector */
 .source-selector {
-    background: var(--bg-secondary);
-    border: 1px solid var(--border-color);
-    border-radius: 12px;
-    padding: 1.5rem;
     margin-bottom: 2rem;
 }
 
 .source-selector h4 {
-    font-size: 1.2rem;
+    font-size: 1.1rem;
     margin-bottom: 1rem;
-    color: var(--text-secondary);
 }
 
 .source-buttons {
@@ -153,165 +192,99 @@
 
 .source-btn {
     padding: 0.75rem 1.5rem;
-    background: var(--bg-tertiary);
+    background: var(--bg-secondary);
     border: 1px solid var(--border-color);
+    color: var(--text-secondary);
     border-radius: 8px;
-    color: var(--text-primary);
-    font-weight: 500;
     cursor: pointer;
     transition: all 0.3s ease;
+    font-size: 0.9rem;
+    font-weight: 500;
+    text-transform: capitalize;
 }
 
 .source-btn:hover {
-    background: var(--bg-primary);
+    background: var(--bg-tertiary);
     border-color: var(--accent-primary);
-    color: var(--accent-primary);
+    color: var(--text-primary);
 }
 
 .source-btn.active {
-    background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+    background: var(--accent-primary);
     border-color: var(--accent-primary);
     color: var(--bg-primary);
-    font-weight: 600;
 }
 
 /* Episode Selector */
 .episode-selector {
-    background: var(--bg-secondary);
-    border: 1px solid var(--border-color);
-    border-radius: 12px;
-    padding: 1.5rem;
     margin-bottom: 2rem;
 }
 
 .episode-selector h4 {
-    font-size: 1.2rem;
+    font-size: 1.1rem;
     margin-bottom: 1rem;
-    color: var(--text-secondary);
 }
 
 .episode-buttons {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
     gap: 0.75rem;
 }
 
 .episode-btn {
     padding: 1rem;
-    background: var(--bg-tertiary);
+    background: var(--bg-secondary);
     border: 1px solid var(--border-color);
+    color: var(--text-secondary);
     border-radius: 8px;
-    color: var(--text-primary);
-    font-weight: 500;
     cursor: pointer;
     transition: all 0.3s ease;
-    text-align: center;
+    text-align: left;
 }
 
 .episode-btn:hover {
-    background: var(--bg-primary);
+    background: var(--bg-tertiary);
     border-color: var(--accent-primary);
-    color: var(--accent-primary);
-    transform: translateY(-2px);
+    color: var(--text-primary);
 }
 
 .episode-btn.active {
-    background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+    background: var(--accent-primary);
     border-color: var(--accent-primary);
     color: var(--bg-primary);
-    font-weight: 600;
 }
 
 .episode-title {
     font-size: 0.85rem;
-    margin-top: 0.5rem;
-    color: var(--text-muted);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-/* Content Info (below player) */
-.content-info {
-    max-width: 1400px;
-    margin: 2rem auto;
-    padding: 2rem;
-    background: var(--bg-secondary);
-    border: 1px solid var(--border-color);
-    border-radius: 12px;
-}
-
-.content-info h2 {
-    font-size: 2rem;
-    margin-bottom: 1rem;
-}
-
-.info-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 1.5rem;
-    margin-top: 1.5rem;
-}
-
-.info-item {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-}
-
-.info-label {
-    font-size: 0.9rem;
-    color: var(--text-muted);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.info-value {
-    font-size: 1.1rem;
-    color: var(--text-primary);
-    font-weight: 500;
+    opacity: 0.8;
+    margin-top: 0.25rem;
 }
 
 /* Responsive */
-@media (max-width: 1024px) {
+@media (max-width: 768px) {
     .detail-header {
         grid-template-columns: 1fr;
         gap: 2rem;
     }
-
+    
     .detail-poster {
-        max-width: 400px;
+        max-width: 300px;
         margin: 0 auto;
     }
-
+    
     .detail-info h1 {
-        font-size: 2.5rem;
+        font-size: 1.75rem;
     }
-}
-
-@media (max-width: 768px) {
-    .detail-container {
-        margin-top: 100px;
-    }
-
-    .detail-info h1 {
-        font-size: 2rem;
-    }
-
-    .detail-meta {
-        flex-direction: column;
-        gap: 0.5rem;
-    }
-
+    
     .detail-actions {
         flex-direction: column;
     }
-
-    .episode-buttons {
-        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    
+    .download-links {
+        grid-template-columns: 1fr;
     }
-
-    .source-buttons {
-        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    
+    .episode-buttons {
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
     }
 }

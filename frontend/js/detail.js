@@ -3,6 +3,7 @@
 let currentContent = null;
 let currentEpisode = null;
 let currentSource = null;
+let isLoading = false; // Prevent infinite loading
 
 // Get content ID from URL
 function getContentId() {
@@ -12,6 +13,12 @@ function getContentId() {
 
 // Load content details
 async function loadContentDetail() {
+    // Prevent multiple loads
+    if (isLoading) {
+        console.log('Already loading, skipping...');
+        return;
+    }
+    
     const contentId = getContentId();
     
     if (!contentId) {
@@ -20,8 +27,11 @@ async function loadContentDetail() {
     }
     
     try {
+        isLoading = true;
+        
         // Load data manager first if not loaded
         if (!DataManager.isLoaded) {
+            console.log('Loading DataManager...');
             await DataManager.loadAllData();
         }
         
@@ -31,6 +41,7 @@ async function loadContentDetail() {
         if (!content) {
             console.error('Content not found in local data');
             document.getElementById('detailContainer').innerHTML = '<div class="detail-loading">Content not found</div>';
+            isLoading = false;
             return;
         }
         
@@ -44,12 +55,19 @@ async function loadContentDetail() {
         
         // Track view if logged in
         if (Auth.isLoggedIn()) {
-            await API.user.trackView(contentId, 0, 0);
+            try {
+                await API.user.trackView(contentId, 0, 0);
+            } catch (error) {
+                console.warn('Track view failed:', error);
+            }
         }
+        
+        isLoading = false;
         
     } catch (error) {
         console.error('Error loading content:', error);
         document.getElementById('detailContainer').innerHTML = '<div class="detail-loading">Failed to load content</div>';
+        isLoading = false;
     }
 }
 
@@ -63,6 +81,41 @@ function displayContentInfo(content) {
     const cast = Array.isArray(content.cast) ? content.cast : [];
     const castItems = cast.slice(0, 10).map(c => `<span class="cast-item">${c}</span>`).join('');
     
+    // Parse download links
+    let downloadLinks = {};
+    try {
+        if (typeof content.download_links === 'string') {
+            downloadLinks = JSON.parse(content.download_links);
+        } else if (typeof content.download_links === 'object') {
+            downloadLinks = content.download_links || {};
+        }
+    } catch (e) {
+        console.warn('Failed to parse download_links:', e);
+    }
+    
+    const downloadLinksHtml = Object.keys(downloadLinks).length > 0 ? `
+        <div class="detail-downloads">
+            <h3>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display: inline-block; vertical-align: middle;">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="7 10 12 15 17 10"></polyline>
+                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                </svg>
+                Download Links
+            </h3>
+            <div class="download-links">
+                ${Object.entries(downloadLinks).map(([name, url]) => `
+                    <a href="${url}" target="_blank" class="download-link" rel="noopener noreferrer">
+                        <span class="download-link-name">${name}</span>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="7" y1="17" x2="17" y2="7"></line>
+                            <polyline points="7 7 17 7 17 17"></polyline>
+                        </svg>
+                    </a>
+                `).join('')}
+            </div>
+        </div>
+    ` : '';\n    
     container.innerHTML = `
         <div class="detail-header">
             <img src="${content.image || 'https://via.placeholder.com/400x600?text=No+Image'}" 
@@ -100,6 +153,7 @@ function displayContentInfo(content) {
                         <div class="cast-list">${castItems}</div>
                     </div>
                 ` : ''}
+                ${downloadLinksHtml}
             </div>
         </div>
     `;
@@ -239,16 +293,109 @@ function scrollToPlayer() {
     playerSection.scrollIntoView({ behavior: 'smooth' });
 }
 
+// Create search modal for detail page
+function createSearchModal() {
+    const modal = document.createElement('div');
+    modal.id = 'searchModal';
+    modal.className = 'search-modal';
+    modal.innerHTML = `
+        <div class="search-modal-header">
+            <h2 id="searchModalTitle">Search Results</h2>
+            <button class="search-modal-close" id="searchModalClose">&times;</button>
+        </div>
+        <div class="search-modal-content">
+            <div class="search-results-grid" id="searchResults"></div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+    
+    // Close modal
+    document.getElementById('searchModalClose').onclick = () => {
+        modal.classList.remove('show');
+    };
+    
+    // Close on background click
+    modal.onclick = (e) => {
+        if (e.target === modal) {
+            modal.classList.remove('show');
+        }
+    };
+}
+
+// Create content card for search results
+function createContentCard(content) {
+    const card = document.createElement('div');
+    card.className = 'content-card';
+    card.onclick = () => {
+        window.location.href = `detail.html?id=${content.id}`;
+    };
+    
+    const genres = Array.isArray(content.genres) ? content.genres.slice(0, 2) : [];
+    const genreTags = genres.map(g => `<span class="genre-tag">${g}</span>`).join('');
+    
+    card.innerHTML = `
+        ${content.rating ? `<div class="content-card-rating">⭐ ${content.rating}</div>` : ''}
+        <img src="${content.image || 'https://via.placeholder.com/150x220?text=No+Image'}" 
+             alt="${content.title}" 
+             class="content-card-image" 
+             onerror="this.src='https://via.placeholder.com/150x220?text=No+Image'">
+        <div class="content-card-info">
+            <h4 class="content-card-title">${content.title}</h4>
+            <div class="content-card-meta">
+                ${content.year ? `<span>${content.year}</span>` : ''}
+                ${content.duration ? `<span>${content.duration}</span>` : ''}
+            </div>
+            ${genreTags ? `<div class="content-card-genres">${genreTags}</div>` : ''}
+        </div>
+    `;
+    
+    return card;
+}
+
+// Show search results in modal
+function showSearchResults(results, query) {
+    const modal = document.getElementById('searchModal');
+    const title = document.getElementById('searchModalTitle');
+    const resultsContainer = document.getElementById('searchResults');
+    
+    title.textContent = `Search: "${query}" (${results.length} results)`;
+    resultsContainer.innerHTML = '';
+    
+    if (results.length === 0) {
+        resultsContainer.innerHTML = '<p style="color: var(--text-muted); text-align: center; padding: 2rem;">No results found</p>';
+    } else {
+        results.forEach(content => {
+            resultsContainer.appendChild(createContentCard(content));
+        });
+    }
+    
+    modal.classList.add('show');
+}
+
 // Search functionality
 function setupSearch() {
     const searchInput = document.getElementById('searchInput');
     const searchBtn = document.getElementById('searchBtn');
     
-    async function performSearch() {
+    function performSearch() {
         const query = searchInput.value.trim();
         if (!query) return;
         
-        window.location.href = `index.html?search=${encodeURIComponent(query)}`;
+        try {
+            // Search in local data
+            const results = DataManager.search(query);
+            
+            // Show results in modal
+            showSearchResults(results, query);
+            
+            if (results.length > 0) {
+                showToast(`Found ${results.length} results`, 'success');
+            } else {
+                showToast('No results found', 'error');
+            }
+        } catch (error) {
+            showToast('Search failed', 'error');
+        }
     }
     
     searchBtn.addEventListener('click', performSearch);
@@ -268,6 +415,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // Setup search
     setupSearch();
     
-    // Load content
+    // Create search modal
+    createSearchModal();
+    
+    // Load content ONCE
     loadContentDetail();
 });

@@ -1,6 +1,11 @@
 // API Configuration
+// ⚠️ IMPORTANT: Change API_BASE_URL to your backend URL when deploying
+// Examples:
+//   - Local development: 'http://localhost:8001'
+//   - Production: 'https://your-backend-domain.com'
+//   - Custom port: 'http://your-domain.com:8001'
 const CONFIG = {
-    API_BASE_URL: 'http://localhost:8001',
+    API_BASE_URL: 'https://vscode-69da0571-fdf7-46a7-b7fd-1fc995b88928.preview.emergentagent.com/proxy/8001',  // 👈 CHANGE THIS to your backend URL
     API_ENDPOINTS: {
         // Auth
         LOGIN: '/api/auth/login',
