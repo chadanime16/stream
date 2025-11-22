@@ -116,6 +116,22 @@ async function loadContent() {
         const series = await API.content.getByCategory('series', 20);
         loadSlider('seriesSlider', series);
         
+        // Load Hollywood
+        const hollywood = await API.content.getByCategory('Hollywood', 20);
+        loadSlider('hollywoodSlider', hollywood);
+        
+        // Load Bollywood
+        const bollywood = await API.content.getByCategory('Bollywood', 20);
+        loadSlider('bollywoodSlider', bollywood);
+        
+        // Load South Indian
+        const south = await API.content.getByCategory('South Indian', 20);
+        loadSlider('southSlider', south);
+        
+        // Load Animation
+        const animation = await API.content.getByCategory('Animation', 20);
+        loadSlider('animationSlider', animation);
+        
         // Load recommendations if logged in
         if (Auth.isLoggedIn()) {
             const recommendations = await API.user.getRecommendations();

@@ -327,25 +327,21 @@ def verify_auth():
 # Content Routes
 @app.route('/api/content/trending', methods=['GET'])
 def get_trending():
-    """Get trending content based on watch count"""
+    """Get trending content IDs based on watch count"""
     try:
         db = get_db()
         cursor = db.cursor()
         limit = request.args.get('limit', 20)
         
         cursor.execute('''
-            SELECT * FROM content 
+            SELECT id, watch_count FROM content 
             ORDER BY watch_count DESC, created_at DESC 
             LIMIT ?
         ''', (limit,))
         
-        trending = []
-        for row in cursor.fetchall():
-            item = dict_from_row(row)
-            item['genres'] = parse_json_field(item['genres'], [])
-            trending.append(item)
+        trending_ids = [row['id'] for row in cursor.fetchall()]
         
-        return jsonify(trending), 200
+        return jsonify(trending_ids), 200
         
     except Exception as e:
         app.logger.error(f"Trending error: {e}")
@@ -704,17 +700,6 @@ def get_history():
 def health_check():
     return jsonify({'status': 'healthy', 'timestamp': datetime.utcnow().isoformat()}), 200
 
-# Sync content on startup
-@app.before_first_request
-def startup():
-    """Run on first request"""
-    if not os.path.exists(DATABASE_PATH):
-        print("🔨 Initializing database...")
-        init_database()
-    
-    if os.path.exists(JSON_DATA_PATH):
-        sync_content_from_json()
-
 if __name__ == '__main__':
     # Initialize database
     if not os.path.exists(DATABASE_PATH):
@@ -725,4 +710,6 @@ if __name__ == '__main__':
     if os.path.exists(JSON_DATA_PATH):
         sync_content_from_json()
     
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    print("🚀 Starting Flask server on http://0.0.0.0:8001")
+    print("📁 Serving frontend from:", app.static_folder)
+    app.run(debug=True, host='0.0.0.0', port=8001, use_reloader=False)
