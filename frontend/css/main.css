@@ -82,8 +82,11 @@ body {
     padding: 0 2rem;
     display: flex;
     align-items: center;
-    justify-content: space-between;
     gap: 2rem;
+}
+
+.nav-container > .user-menu {
+    margin-left: auto;
 }
 
 .nav-brand h1 {
@@ -331,6 +334,17 @@ body {
 .btn-secondary:hover {
     background: rgba(255, 255, 255, 0.2);
     transform: translateY(-2px);
+}
+
+.btn-secondary.in-watchlist {
+    background: rgba(16, 185, 129, 0.2);
+    border-color: var(--success);
+    color: var(--success);
+}
+
+.btn-secondary.in-watchlist:hover {
+    background: rgba(16, 185, 129, 0.3);
+    border-color: var(--success);
 }
 
 .btn-full {
@@ -748,6 +762,158 @@ body {
     border-color: var(--error);
 }
 
+/* Genre Page Styles */
+.genre-header {
+    position: relative;
+    background: linear-gradient(135deg, var(--bg-secondary), var(--bg-tertiary));
+    padding: 8rem 2rem 3rem;
+    margin-top: 70px;
+}
+
+.genre-header-content {
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.genre-header-content h1 {
+    font-size: 3rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.genre-header-content p {
+    font-size: 1.1rem;
+    color: var(--text-secondary);
+}
+
+.genre-filters {
+    margin-bottom: 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.filter-info {
+    font-size: 1rem;
+    color: var(--text-secondary);
+}
+
+.genre-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 3rem;
+}
+
+.loading-message {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 3rem;
+    color: var(--text-muted);
+    font-size: 1.1rem;
+}
+
+.no-results {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 3rem;
+    color: var(--text-muted);
+    font-size: 1.1rem;
+}
+
+/* Watchlist Modal */
+.watchlist-modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.95);
+    backdrop-filter: blur(10px);
+    z-index: 2500;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+}
+
+.watchlist-modal.show {
+    opacity: 1;
+    visibility: visible;
+}
+
+.watchlist-modal-content {
+    background: var(--bg-secondary);
+    border-radius: 16px;
+    width: 90%;
+    max-width: 1200px;
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    transform: scale(0.9);
+    transition: transform 0.3s ease;
+}
+
+.watchlist-modal.show .watchlist-modal-content {
+    transform: scale(1);
+}
+
+.watchlist-modal-header {
+    padding: 2rem;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.watchlist-modal-header h2 {
+    font-size: 2rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.watchlist-modal-body {
+    padding: 2rem;
+    overflow-y: auto;
+    flex: 1;
+}
+
+.watchlist-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 1.5rem;
+}
+
+.watchlist-empty {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 4rem 2rem;
+    color: var(--text-muted);
+}
+
+.watchlist-empty svg {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto 1rem;
+    opacity: 0.3;
+}
+
+.watchlist-empty h3 {
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+    color: var(--text-secondary);
+}
+
+.watchlist-empty p {
+    font-size: 1rem;
+}
+
 /* Responsive */
 @media (max-width: 1024px) {
     .search-results-grid {
@@ -758,11 +924,22 @@ body {
         width: 300px;
         height: 170px;
     }
+    
+    .genre-grid {
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    }
+    
+    .genre-header-content h1 {
+        font-size: 2.5rem;
+    }
 }
 
 @media (max-width: 768px) {
     .nav-container {
         position: relative;
+        flex-wrap: nowrap;
+        padding: 0 1rem;
+        gap: 0.5rem;
     }
 
     .nav-search {
@@ -772,6 +949,28 @@ body {
     .mobile-search-icon,
     .mobile-menu-toggle {
         display: block;
+        padding: 0.25rem;
+    }
+    
+    /* Keep user menu visible and in the navbar */
+    .user-menu {
+        position: relative;
+        order: 2;
+        margin-left: auto;
+    }
+    
+    .user-btn {
+        padding: 0.25rem;
+    }
+    
+    .mobile-menu-toggle {
+        order: 3;
+        margin-left: 0.25rem;
+    }
+    
+    .mobile-search-icon {
+        order: 1;
+        margin-right: 0;
     }
 
     .nav-menu {
@@ -788,13 +987,17 @@ body {
         max-height: 0;
         overflow: hidden;
         opacity: 0;
-        transition: all 0.3s ease;
+        visibility: hidden;
+        transition: max-height 0.3s ease, opacity 0.3s ease, visibility 0.3s ease;
         align-items: stretch;
+        z-index: 999;
+        order: 4;
     }
 
     .nav-menu.active {
         max-height: 600px;
         opacity: 1;
+        visibility: visible;
     }
 
     .nav-link {
@@ -803,15 +1006,13 @@ body {
         width: 100%;
         display: block;
     }
+    
+    .nav-link.active::after {
+        display: none;
+    }
 
     .nav-link:hover {
         background: var(--bg-secondary);
-    }
-
-    .user-menu {
-        padding: 1rem 2rem;
-        display: flex;
-        justify-content: flex-start;
     }
 
     .hero-title {
@@ -831,6 +1032,18 @@ body {
         grid-template-columns: 1fr;
     }
     
+    .genre-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .genre-header {
+        padding: 6rem 1rem 2rem;
+    }
+    
+    .genre-header-content h1 {
+        font-size: 2rem;
+    }
+    
     .slider-nav {
         display: none;
     }
@@ -846,5 +1059,21 @@ body {
     
     .search-modal-content {
         padding: 1rem;
+    }
+    
+    .watchlist-modal-header {
+        padding: 1.5rem;
+    }
+    
+    .watchlist-modal-header h2 {
+        font-size: 1.5rem;
+    }
+    
+    .watchlist-modal-body {
+        padding: 1rem;
+    }
+    
+    .watchlist-grid {
+        grid-template-columns: 1fr;
     }
 }

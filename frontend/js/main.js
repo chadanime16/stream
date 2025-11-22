@@ -268,10 +268,8 @@ function displaySearchResults(results, query) {
 // Show search results in modal
 function showSearchResults(results, query) {
     const modal = document.getElementById('searchModal');
-    const title = document.getElementById('searchModalTitle');
     const resultsContainer = document.getElementById('searchResults');
     
-    title.textContent = `Search: "${query}" (${results.length} results)`;
     resultsContainer.innerHTML = '';
     
     if (results.length === 0) {
@@ -285,55 +283,117 @@ function showSearchResults(results, query) {
     modal.classList.add('show');
 }
 
-// Search functionality with real-time search
+// Search functionality
 function setupSearch() {
     const searchInput = document.getElementById('searchInput');
     const searchBtn = document.getElementById('searchBtn');
     
-    function performSearch() {
-        const query = searchInput.value.trim();
-        if (!query) {
-            // Close modal if search is empty
-            document.getElementById('searchModal').classList.remove('show');
-            return;
-        }
+    // Open search modal when clicking on search input or button
+    function openSearchModal() {
+        const searchModal = document.getElementById('searchModal');
+        const searchModalInput = document.getElementById('searchModalInput');
         
-        try {
-            // Search in local data
-            const results = DataManager.search(query);
-            
-            // Show results in modal
-            showSearchResults(results, query);
-        } catch (error) {
-            console.error('Search error:', error);
+        if (searchModal && searchModalInput) {
+            searchModal.classList.add('show');
+            searchModalInput.focus();
         }
     }
     
-    // Real-time search as user types (with debounce)
-    searchInput.addEventListener('input', (e) => {
-        // Clear previous timeout
-        if (searchTimeout) {
-            clearTimeout(searchTimeout);
-        }
-        
-        // Set new timeout for debounce (300ms)
-        searchTimeout = setTimeout(() => {
-            performSearch();
-        }, 300);
-    });
+    // Click on search input opens modal
+    if (searchInput) {
+        searchInput.addEventListener('click', openSearchModal);
+        searchInput.addEventListener('focus', openSearchModal);
+    }
     
-    // Search on button click
-    searchBtn.addEventListener('click', performSearch);
+    // Click on search button opens modal
+    if (searchBtn) {
+        searchBtn.addEventListener('click', openSearchModal);
+    }
+}
+
+// Watchlist Modal functionality
+function setupWatchlistModal() {
+    const watchlistBtn = document.getElementById('watchlistBtn');
+    const watchlistModal = document.getElementById('watchlistModal');
+    const watchlistModalClose = document.getElementById('watchlistModalClose');
+    const watchlistGrid = document.getElementById('watchlistGrid');
     
-    // Search on Enter key
-    searchInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
-            if (searchTimeout) {
-                clearTimeout(searchTimeout);
+    // Open watchlist modal
+    if (watchlistBtn) {
+        watchlistBtn.addEventListener('click', async () => {
+            if (!Auth.isLoggedIn()) {
+                document.getElementById('authModal').classList.add('show');
+                return;
             }
-            performSearch();
-        }
-    });
+            
+            // Show modal
+            watchlistModal.classList.add('show');
+            
+            // Load watchlist
+            watchlistGrid.innerHTML = '<div class="loading-message">Loading your watchlist...</div>';
+            
+            try {
+                const watchlistIds = await API.user.getWatchlist();
+                
+                if (!watchlistIds || watchlistIds.length === 0) {
+                    watchlistGrid.innerHTML = `
+                        <div class="watchlist-empty">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+                            </svg>
+                            <h3>Your watchlist is empty</h3>
+                            <p>Add movies and series to your watchlist to watch them later</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                // Match with local data
+                const watchlistItems = DataManager.getByIds(watchlistIds);
+                
+                if (watchlistItems.length === 0) {
+                    watchlistGrid.innerHTML = `
+                        <div class="watchlist-empty">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+                            </svg>
+                            <h3>Your watchlist is empty</h3>
+                            <p>Add movies and series to your watchlist to watch them later</p>
+                        </div>
+                    `;
+                } else {
+                    watchlistGrid.innerHTML = '';
+                    watchlistItems.forEach(item => {
+                        watchlistGrid.appendChild(createContentCard(item));
+                    });
+                }
+            } catch (error) {
+                console.error('Error loading watchlist:', error);
+                watchlistGrid.innerHTML = `
+                    <div class="watchlist-empty">
+                        <h3>Failed to load watchlist</h3>
+                        <p>Please try again later</p>
+                    </div>
+                `;
+            }
+        });
+    }
+    
+    // Close watchlist modal
+    if (watchlistModalClose) {
+        watchlistModalClose.addEventListener('click', () => {
+            watchlistModal.classList.remove('show');
+        });
+    }
+    
+    // Close on background click
+    if (watchlistModal) {
+        watchlistModal.addEventListener('click', (e) => {
+            if (e.target === watchlistModal) {
+                watchlistModal.classList.remove('show');
+            }
+        });
+    }
 }
 
 // My List functionality
@@ -430,6 +490,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     setupSearch();
     setupMyList();
     setupMobileMenu();
+    setupWatchlistModal();
     
     // Create search modal
     createSearchModal();

@@ -165,15 +165,78 @@ function displayContentInfo(content) {
         scrollToPlayer();
     };
     
-    document.getElementById('watchlistBtn').onclick = async () => {
+    // Setup watchlist button with toggle functionality
+    setupWatchlistButton(content.id);
+}
+
+// Setup watchlist button
+async function setupWatchlistButton(contentId) {
+    const watchlistBtn = document.getElementById('watchlistBtn');
+    
+    // Check if item is in watchlist
+    async function checkWatchlistStatus() {
+        if (!Auth.isLoggedIn()) {
+            updateWatchlistButton(false);
+            return false;
+        }
+        
+        try {
+            const watchlist = await API.user.getWatchlist();
+            const isInWatchlist = watchlist && watchlist.includes(contentId);
+            updateWatchlistButton(isInWatchlist);
+            return isInWatchlist;
+        } catch (error) {
+            console.warn('Failed to check watchlist:', error);
+            updateWatchlistButton(false);
+            return false;
+        }
+    }
+    
+    // Update button appearance
+    function updateWatchlistButton(isInWatchlist) {
+        if (isInWatchlist) {
+            watchlistBtn.innerHTML = `
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M20 6L9 17l-5-5"></path>
+                </svg>
+                Remove from List
+            `;
+            watchlistBtn.classList.add('in-watchlist');
+        } else {
+            watchlistBtn.innerHTML = `
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 5v14M5 12h14"></path>
+                </svg>
+                Add to List
+            `;
+            watchlistBtn.classList.remove('in-watchlist');
+        }
+    }
+    
+    // Check initial status
+    const isInWatchlist = await checkWatchlistStatus();
+    
+    // Setup click handler
+    watchlistBtn.onclick = async () => {
         if (!Auth.isLoggedIn()) {
             document.getElementById('authModal').classList.add('show');
             return;
         }
         
         try {
-            await API.user.addToWatchlist(content.id);
-            showToast('Added to watchlist!', 'success');
+            const currentStatus = await checkWatchlistStatus();
+            
+            if (currentStatus) {
+                // Remove from watchlist
+                await API.user.removeFromWatchlist(contentId);
+                showToast('Removed from watchlist!', 'success');
+                updateWatchlistButton(false);
+            } else {
+                // Add to watchlist
+                await API.user.addToWatchlist(contentId);
+                showToast('Added to watchlist!', 'success');
+                updateWatchlistButton(true);
+            }
         } catch (error) {
             showToast(error.message, 'error');
         }

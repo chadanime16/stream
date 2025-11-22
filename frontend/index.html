@@ -12,7 +12,7 @@
     <nav class="navbar">
         <div class="nav-container">
             <div class="nav-brand">
-                <h1>Chadcinema</h1>
+                <a href="index.html"><h1>Chadcinema</h1></a>
             </div>
             <div class="nav-search">
                 <input type="text" id="searchInput" placeholder="Search movies, series, anime..." class="search-input">
@@ -29,6 +29,7 @@
                     <path d="m21 21-4.35-4.35"></path>
                 </svg>
             </button>
+           
             <button class="mobile-menu-toggle" id="mobileMenuToggle">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <line x1="3" y1="12" x2="21" y2="12"></line>
@@ -38,28 +39,29 @@
             </button>
             <div class="nav-menu" id="navMenu">
                 <a href="index.html" class="nav-link active">Home</a>
-                <a href="#" class="nav-link" data-category="movies">Movies</a>
-                <a href="#" class="nav-link" data-category="series">Series</a>
-                <a href="#" class="nav-link" data-category="anime">Anime</a>
-                <a href="#" class="nav-link" data-category="drama">Drama</a>
-                <a href="#" class="nav-link" data-category="cartoon">Cartoon</a>
+                <a href="genre.html?type=movie" class="nav-link">Movies</a>
+                <a href="genre.html?type=series" class="nav-link">Series</a>
+                <a href="genre.html?type=anime" class="nav-link">Anime</a>
+                <a href="genre.html?genre=drama" class="nav-link">Drama</a>
+                <a href="genre.html?type=cartoon" class="nav-link">Cartoon</a>
                 <a href="#" class="nav-link" data-category="about">About</a>
-                <div class="user-menu">
-                    <button class="user-btn" id="userBtn">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                            <circle cx="12" cy="7" r="4"></circle>
-                        </svg>
-                    </button>
-                    <div class="user-dropdown" id="userDropdown">
-                        <div class="user-info" id="userInfo" style="display: none;">
-                            <p id="usernameDisplay"></p>
-                            <button class="dropdown-item" id="logoutBtn">Logout</button>
-                        </div>
-                        <div class="auth-buttons" id="authButtons">
-                            <button class="dropdown-item" id="loginBtn">Login</button>
-                            <button class="dropdown-item" id="signupBtn">Sign Up</button>
-                        </div>
+            </div>
+             <div class="user-menu">
+                <button class="user-btn" id="userBtn">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="12" cy="7" r="4"></circle>
+                    </svg>
+                </button>
+                <div class="user-dropdown" id="userDropdown">
+                    <div class="user-info" id="userInfo" style="display: none;">
+                        <p id="usernameDisplay"></p>
+                        <button class="dropdown-item" id="watchlistBtn">My Watchlist</button>
+                        <button class="dropdown-item" id="logoutBtn">Logout</button>
+                    </div>
+                    <div class="auth-buttons" id="authButtons">
+                        <button class="dropdown-item" id="loginBtn">Login</button>
+                        <button class="dropdown-item" id="signupBtn">Sign Up</button>
                     </div>
                 </div>
             </div>
@@ -105,7 +107,7 @@
         <section class="content-row">
             <div class="row-header">
                 <h3>🎌 Anime</h3>
-                <a href="#" class="view-all">View All →</a>
+                <a href="genre.html?type=anime" class="view-all">View All →</a>
             </div>
             <div class="content-slider" id="animeSlider">
                 <div class="slider-loading">Loading...</div>
@@ -116,7 +118,7 @@
         <section class="content-row">
             <div class="row-header">
                 <h3>🇰🇷 Korean Drama & Movies</h3>
-                <a href="#" class="view-all">View All →</a>
+                <a href="genre.html?industry=korean" class="view-all">View All →</a>
             </div>
             <div class="content-slider" id="koreanSlider">
                 <div class="slider-loading">Loading...</div>
@@ -127,7 +129,7 @@
         <section class="content-row">
             <div class="row-header">
                 <h3>🎬 Movies</h3>
-                <a href="#" class="view-all">View All →</a>
+                <a href="genre.html?type=movie" class="view-all">View All →</a>
             </div>
             <div class="content-slider" id="moviesSlider">
                 <div class="slider-loading">Loading...</div>
@@ -138,7 +140,7 @@
         <section class="content-row">
             <div class="row-header">
                 <h3>📺 Series</h3>
-                <a href="#" class="view-all">View All →</a>
+                <a href="genre.html?type=series" class="view-all">View All →</a>
             </div>
             <div class="content-slider" id="seriesSlider">
                 <div class="slider-loading">Loading...</div>
@@ -149,7 +151,7 @@
         <section class="content-row">
             <div class="row-header">
                 <h3>🎬 Hollywood</h3>
-                <a href="#" class="view-all">View All →</a>
+                <a href="genre.html?industry=hollywood" class="view-all">View All →</a>
             </div>
             <div class="content-slider" id="hollywoodSlider">
                 <div class="slider-loading">Loading...</div>
@@ -160,7 +162,7 @@
         <section class="content-row">
             <div class="row-header">
                 <h3>🎭 Bollywood</h3>
-                <a href="#" class="view-all">View All →</a>
+                <a href="genre.html?industry=bollywood" class="view-all">View All →</a>
             </div>
             <div class="content-slider" id="bollywoodSlider">
                 <div class="slider-loading">Loading...</div>
@@ -171,7 +173,7 @@
         <section class="content-row">
             <div class="row-header">
                 <h3>🎥 South Indian</h3>
-                <a href="#" class="view-all">View All →</a>
+                <a href="genre.html?industry=south indian" class="view-all">View All →</a>
             </div>
             <div class="content-slider" id="southSlider">
                 <div class="slider-loading">Loading...</div>
@@ -182,7 +184,7 @@
         <section class="content-row">
             <div class="row-header">
                 <h3>🎨 Animation</h3>
-                <a href="#" class="view-all">View All →</a>
+                <a href="genre.html?industry=animation" class="view-all">View All →</a>
             </div>
             <div class="content-slider" id="animationSlider">
                 <div class="slider-loading">Loading...</div>
@@ -251,6 +253,21 @@
                     Already have an account? 
                     <a href="#" id="showLogin">Login</a>
                 </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Watchlist Modal -->
+    <div class="watchlist-modal" id="watchlistModal">
+        <div class="watchlist-modal-content">
+            <div class="watchlist-modal-header">
+                <h2>My Watchlist</h2>
+                <button class="modal-close" id="watchlistModalClose">&times;</button>
+            </div>
+            <div class="watchlist-modal-body">
+                <div class="watchlist-grid" id="watchlistGrid">
+                    <div class="loading-message">Loading your watchlist...</div>
+                </div>
             </div>
         </div>
     </div>
