@@ -16,7 +16,7 @@
                 <a href="index.html"><h1>Chadcinema</h1></a>
             </div>
             <div class="nav-search">
-                <input type="text" id="searchInput" placeholder="Search..." class="search-input">
+                <input type="text" id="searchInput" placeholder="Search movies, series, anime..." class="search-input">
                 <button class="search-btn" id="searchBtn">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <circle cx="11" cy="11" r="8"></circle>
@@ -24,9 +24,27 @@
                     </svg>
                 </button>
             </div>
-            <div class="nav-menu">
+            <button class="mobile-search-icon" id="mobileSearchIcon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <path d="m21 21-4.35-4.35"></path>
+                </svg>
+            </button>
+            <button class="mobile-menu-toggle" id="mobileMenuToggle">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="3" y1="12" x2="21" y2="12"></line>
+                    <line x1="3" y1="6" x2="21" y2="6"></line>
+                    <line x1="3" y1="18" x2="21" y2="18"></line>
+                </svg>
+            </button>
+            <div class="nav-menu" id="navMenu">
                 <a href="index.html" class="nav-link">Home</a>
-                <a href="#" class="nav-link" id="myListLink">My List</a>
+                <a href="#" class="nav-link" data-category="movies">Movies</a>
+                <a href="#" class="nav-link" data-category="series">Series</a>
+                <a href="#" class="nav-link" data-category="anime">Anime</a>
+                <a href="#" class="nav-link" data-category="drama">Drama</a>
+                <a href="#" class="nav-link" data-category="cartoon">Cartoon</a>
+                <a href="#" class="nav-link" data-category="about">About</a>
                 <div class="user-menu">
                     <button class="user-btn" id="userBtn">
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -70,6 +88,19 @@
         <div class="episode-selector" id="episodeSelector" style="display: none;">
             <h4>Episodes</h4>
             <div class="episode-buttons" id="episodeButtons"></div>
+        </div>
+        
+        <!-- Episode Download Links -->
+        <div class="episode-downloads" id="episodeDownloads" style="display: none;">
+            <h4>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display: inline-block; vertical-align: middle;">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="7 10 12 15 17 10"></polyline>
+                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                </svg>
+                Episode Download Links
+            </h4>
+            <div class="download-links" id="episodeDownloadLinks"></div>
         </div>
     </div>
 
@@ -124,6 +155,17 @@
                     <a href="#" id="showLogin">Login</a>
                 </p>
             </div>
+        </div>
+    </div>
+
+    <!-- Search Modal -->
+    <div class="search-modal" id="searchModal">
+        <div class="search-modal-header">
+            <input type="text" id="searchModalInput" placeholder="Search movies, series, anime..." class="search-modal-input">
+            <button class="search-modal-close" id="searchModalClose">&times;</button>
+        </div>
+        <div class="search-modal-content">
+            <div class="search-results-grid" id="searchResults"></div>
         </div>
     </div>
 

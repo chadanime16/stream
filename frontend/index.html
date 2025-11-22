@@ -23,9 +23,27 @@
                     </svg>
                 </button>
             </div>
-            <div class="nav-menu">
+            <button class="mobile-search-icon" id="mobileSearchIcon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <path d="m21 21-4.35-4.35"></path>
+                </svg>
+            </button>
+            <button class="mobile-menu-toggle" id="mobileMenuToggle">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="3" y1="12" x2="21" y2="12"></line>
+                    <line x1="3" y1="6" x2="21" y2="6"></line>
+                    <line x1="3" y1="18" x2="21" y2="18"></line>
+                </svg>
+            </button>
+            <div class="nav-menu" id="navMenu">
                 <a href="index.html" class="nav-link active">Home</a>
-                <a href="#" class="nav-link" id="myListLink">My List</a>
+                <a href="#" class="nav-link" data-category="movies">Movies</a>
+                <a href="#" class="nav-link" data-category="series">Series</a>
+                <a href="#" class="nav-link" data-category="anime">Anime</a>
+                <a href="#" class="nav-link" data-category="drama">Drama</a>
+                <a href="#" class="nav-link" data-category="cartoon">Cartoon</a>
+                <a href="#" class="nav-link" data-category="about">About</a>
                 <div class="user-menu">
                     <button class="user-btn" id="userBtn">
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">

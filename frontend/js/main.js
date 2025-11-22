@@ -200,7 +200,7 @@ function createSearchModal() {
     modal.className = 'search-modal';
     modal.innerHTML = `
         <div class="search-modal-header">
-            <h2 id="searchModalTitle">Search Results</h2>
+            <input type="text" id="searchModalInput" placeholder="Search movies, series, anime..." class="search-modal-input">
             <button class="search-modal-close" id="searchModalClose">&times;</button>
         </div>
         <div class="search-modal-content">
@@ -209,17 +209,60 @@ function createSearchModal() {
     `;
     document.body.appendChild(modal);
     
+    const searchModalInput = document.getElementById('searchModalInput');
+    const searchModalClose = document.getElementById('searchModalClose');
+    
     // Close modal
-    document.getElementById('searchModalClose').onclick = () => {
+    searchModalClose.onclick = () => {
         modal.classList.remove('show');
+        searchModalInput.value = '';
+        document.getElementById('searchResults').innerHTML = '';
     };
     
     // Close on background click
     modal.onclick = (e) => {
         if (e.target === modal) {
             modal.classList.remove('show');
+            searchModalInput.value = '';
+            document.getElementById('searchResults').innerHTML = '';
         }
     };
+    
+    // Real-time search in modal
+    searchModalInput.addEventListener('input', (e) => {
+        if (searchTimeout) {
+            clearTimeout(searchTimeout);
+        }
+        
+        searchTimeout = setTimeout(() => {
+            const query = searchModalInput.value.trim();
+            if (!query) {
+                document.getElementById('searchResults').innerHTML = '';
+                return;
+            }
+            
+            try {
+                const results = DataManager.search(query);
+                displaySearchResults(results, query);
+            } catch (error) {
+                console.error('Search error:', error);
+            }
+        }, 300);
+    });
+}
+
+// Display search results
+function displaySearchResults(results, query) {
+    const resultsContainer = document.getElementById('searchResults');
+    resultsContainer.innerHTML = '';
+    
+    if (results.length === 0) {
+        resultsContainer.innerHTML = '<p style="color: var(--text-muted); text-align: center; padding: 2rem;">No results found</p>';
+    } else {
+        results.forEach(content => {
+            resultsContainer.appendChild(createContentCard(content));
+        });
+    }
 }
 
 // Show search results in modal
@@ -338,6 +381,44 @@ function setupNavbar() {
     });
 }
 
+// Mobile menu toggle
+function setupMobileMenu() {
+    const mobileMenuToggle = document.getElementById('mobileMenuToggle');
+    const mobileSearchIcon = document.getElementById('mobileSearchIcon');
+    const navMenu = document.getElementById('navMenu');
+    const searchModal = document.getElementById('searchModal');
+    const searchModalInput = document.getElementById('searchModalInput');
+    
+    if (mobileMenuToggle) {
+        mobileMenuToggle.addEventListener('click', (e) => {
+            e.stopPropagation();
+            navMenu.classList.toggle('active');
+        });
+    }
+    
+    if (mobileSearchIcon) {
+        mobileSearchIcon.addEventListener('click', () => {
+            searchModal.classList.add('show');
+            searchModalInput.focus();
+        });
+    }
+    
+    // Close menu when clicking outside
+    document.addEventListener('click', (e) => {
+        if (navMenu && !navMenu.contains(e.target) && mobileMenuToggle && !mobileMenuToggle.contains(e.target)) {
+            navMenu.classList.remove('active');
+        }
+    });
+    
+    // Close menu when clicking a link
+    const navLinks = document.querySelectorAll('.nav-link');
+    navLinks.forEach(link => {
+        link.addEventListener('click', () => {
+            navMenu.classList.remove('active');
+        });
+    });
+}
+
 // Initialize page
 document.addEventListener('DOMContentLoaded', async () => {
     // Initialize auth
@@ -348,6 +429,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     setupNavbar();
     setupSearch();
     setupMyList();
+    setupMobileMenu();
     
     // Create search modal
     createSearchModal();

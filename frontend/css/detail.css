@@ -260,6 +260,23 @@
     margin-top: 0.25rem;
 }
 
+/* Episode Downloads */
+.episode-downloads {
+    margin-bottom: 2rem;
+    padding: 1.5rem;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+}
+
+.episode-downloads h4 {
+    font-size: 1.1rem;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
     .detail-header {

@@ -4,6 +4,7 @@ let currentContent = null;
 let currentEpisode = null;
 let currentSource = null;
 let isLoading = false; // Prevent infinite loading
+let searchTimeout = null;
 
 // Get content ID from URL
 function getContentId() {
@@ -115,7 +116,8 @@ function displayContentInfo(content) {
                 `).join('')}
             </div>
         </div>
-    ` : '';\n    
+    ` : '';
+    
     container.innerHTML = `
         <div class="detail-header">
             <img src="${content.image || 'https://via.placeholder.com/400x600?text=No+Image'}" 
@@ -194,6 +196,10 @@ function setupPlayer(content) {
         // Load first episode
         loadEpisode(episodes[0]);
     } else {
+        // Hide episode downloads for movies
+        const episodeDownloads = document.getElementById('episodeDownloads');
+        episodeDownloads.style.display = 'none';
+        
         // Setup sources for movie
         const urls = content.urls || {};
         setupSources(urls);
@@ -243,10 +249,49 @@ function loadEpisode(episode) {
     const urls = episode.streaming_links || {};
     setupSources(urls);
     
+    // Setup episode download links
+    setupEpisodeDownloadLinks(episode);
+    
     // Load first source
     const firstSource = Object.keys(urls)[0];
     if (firstSource) {
         loadSource(urls[firstSource]);
+    }
+}
+
+// Setup episode download links
+function setupEpisodeDownloadLinks(episode) {
+    const episodeDownloads = document.getElementById('episodeDownloads');
+    const episodeDownloadLinks = document.getElementById('episodeDownloadLinks');
+    
+    // Parse download links from episode
+    let downloadLinks = {};
+    try {
+        if (typeof episode.download_links === 'string') {
+            downloadLinks = JSON.parse(episode.download_links);
+        } else if (typeof episode.download_links === 'object') {
+            downloadLinks = episode.download_links || {};
+        }
+    } catch (e) {
+        console.warn('Failed to parse episode download_links:', e);
+    }
+    
+    // Show/hide episode downloads section
+    if (Object.keys(downloadLinks).length > 0) {
+        episodeDownloads.style.display = 'block';
+        
+        // Generate download links HTML
+        episodeDownloadLinks.innerHTML = Object.entries(downloadLinks).map(([name, url]) => `
+            <a href="${url}" target="_blank" class="download-link" rel="noopener noreferrer">
+                <span class="download-link-name">${name}</span>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="7" y1="17" x2="17" y2="7"></line>
+                    <polyline points="7 7 17 7 17 17"></polyline>
+                </svg>
+            </a>
+        `).join('');
+    } else {
+        episodeDownloads.style.display = 'none';
     }
 }
 
@@ -293,33 +338,49 @@ function scrollToPlayer() {
     playerSection.scrollIntoView({ behavior: 'smooth' });
 }
 
-// Create search modal for detail page
-function createSearchModal() {
-    const modal = document.createElement('div');
-    modal.id = 'searchModal';
-    modal.className = 'search-modal';
-    modal.innerHTML = `
-        <div class="search-modal-header">
-            <h2 id="searchModalTitle">Search Results</h2>
-            <button class="search-modal-close" id="searchModalClose">&times;</button>
-        </div>
-        <div class="search-modal-content">
-            <div class="search-results-grid" id="searchResults"></div>
-        </div>
-    `;
-    document.body.appendChild(modal);
+// Setup search modal
+function setupSearchModal() {
+    const modal = document.getElementById('searchModal');
+    const searchModalClose = document.getElementById('searchModalClose');
+    const searchModalInput = document.getElementById('searchModalInput');
     
     // Close modal
-    document.getElementById('searchModalClose').onclick = () => {
+    searchModalClose.onclick = () => {
         modal.classList.remove('show');
+        searchModalInput.value = '';
+        document.getElementById('searchResults').innerHTML = '';
     };
     
     // Close on background click
     modal.onclick = (e) => {
         if (e.target === modal) {
             modal.classList.remove('show');
+            searchModalInput.value = '';
+            document.getElementById('searchResults').innerHTML = '';
         }
     };
+    
+    // Real-time search in modal
+    searchModalInput.addEventListener('input', (e) => {
+        if (searchTimeout) {
+            clearTimeout(searchTimeout);
+        }
+        
+        searchTimeout = setTimeout(() => {
+            const query = searchModalInput.value.trim();
+            if (!query) {
+                document.getElementById('searchResults').innerHTML = '';
+                return;
+            }
+            
+            try {
+                const results = DataManager.search(query);
+                displaySearchResults(results, query);
+            } catch (error) {
+                console.error('Search error:', error);
+            }
+        }, 300);
+    });
 }
 
 // Create content card for search results
@@ -352,13 +413,9 @@ function createContentCard(content) {
     return card;
 }
 
-// Show search results in modal
-function showSearchResults(results, query) {
-    const modal = document.getElementById('searchModal');
-    const title = document.getElementById('searchModalTitle');
+// Display search results in modal
+function displaySearchResults(results, query) {
     const resultsContainer = document.getElementById('searchResults');
-    
-    title.textContent = `Search: "${query}" (${results.length} results)`;
     resultsContainer.innerHTML = '';
     
     if (results.length === 0) {
@@ -368,40 +425,44 @@ function showSearchResults(results, query) {
             resultsContainer.appendChild(createContentCard(content));
         });
     }
-    
-    modal.classList.add('show');
 }
 
-// Search functionality
+// Search functionality with real-time search
 function setupSearch() {
     const searchInput = document.getElementById('searchInput');
     const searchBtn = document.getElementById('searchBtn');
+    const modal = document.getElementById('searchModal');
+    const searchModalInput = document.getElementById('searchModalInput');
     
-    function performSearch() {
-        const query = searchInput.value.trim();
-        if (!query) return;
+    function openSearchModal(initialQuery = '') {
+        modal.classList.add('show');
+        searchModalInput.value = initialQuery;
+        searchModalInput.focus();
         
-        try {
-            // Search in local data
-            const results = DataManager.search(query);
-            
-            // Show results in modal
-            showSearchResults(results, query);
-            
-            if (results.length > 0) {
-                showToast(`Found ${results.length} results`, 'success');
-            } else {
-                showToast('No results found', 'error');
+        if (initialQuery.trim()) {
+            try {
+                const results = DataManager.search(initialQuery.trim());
+                displaySearchResults(results, initialQuery.trim());
+            } catch (error) {
+                console.error('Search error:', error);
             }
-        } catch (error) {
-            showToast('Search failed', 'error');
         }
     }
     
-    searchBtn.addEventListener('click', performSearch);
+    // Open modal on input focus
+    searchInput.addEventListener('focus', () => {
+        openSearchModal(searchInput.value);
+    });
+    
+    // Open modal on button click
+    searchBtn.addEventListener('click', () => {
+        openSearchModal(searchInput.value);
+    });
+    
+    // Open modal on Enter key
     searchInput.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') {
-            performSearch();
+            openSearchModal(searchInput.value);
         }
     });
 }
@@ -415,8 +476,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // Setup search
     setupSearch();
     
-    // Create search modal
-    createSearchModal();
+    // Setup search modal
+    setupSearchModal();
     
     // Load content ONCE
     loadContentDetail();

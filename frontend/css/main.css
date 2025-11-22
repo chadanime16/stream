@@ -106,6 +106,22 @@ body {
     position: relative;
 }
 
+.mobile-search-icon,
+.mobile-menu-toggle {
+    display: none;
+    background: transparent;
+    border: none;
+    color: var(--text-primary);
+    cursor: pointer;
+    padding: 0.5rem;
+    transition: color 0.3s ease;
+}
+
+.mobile-search-icon:hover,
+.mobile-menu-toggle:hover {
+    color: var(--accent-primary);
+}
+
 .search-input {
     width: 100%;
     padding: 0.75rem 3rem 0.75rem 1rem;
@@ -523,6 +539,24 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 1rem;
+}
+
+.search-modal-input {
+    flex: 1;
+    padding: 1rem 1.5rem;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    border-radius: 50px;
+    color: var(--text-primary);
+    font-size: 1.1rem;
+    transition: all 0.3s ease;
+}
+
+.search-modal-input:focus {
+    outline: none;
+    border-color: var(--accent-primary);
+    box-shadow: 0 0 0 3px rgba(255, 51, 51, 0.1);
 }
 
 .search-modal-header h2 {
@@ -728,14 +762,56 @@ body {
 
 @media (max-width: 768px) {
     .nav-container {
-        flex-wrap: wrap;
+        position: relative;
     }
 
     .nav-search {
-        order: 3;
-        flex-basis: 100%;
-        max-width: 100%;
-        margin-top: 1rem;
+        display: none;
+    }
+
+    .mobile-search-icon,
+    .mobile-menu-toggle {
+        display: block;
+    }
+
+    .nav-menu {
+        position: fixed;
+        top: 70px;
+        left: 0;
+        right: 0;
+        background: var(--bg-primary);
+        border-top: 1px solid var(--border-color);
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+        flex-direction: column;
+        gap: 0;
+        padding: 0;
+        max-height: 0;
+        overflow: hidden;
+        opacity: 0;
+        transition: all 0.3s ease;
+        align-items: stretch;
+    }
+
+    .nav-menu.active {
+        max-height: 600px;
+        opacity: 1;
+    }
+
+    .nav-link {
+        padding: 1rem 2rem;
+        border-bottom: 1px solid var(--border-color);
+        width: 100%;
+        display: block;
+    }
+
+    .nav-link:hover {
+        background: var(--bg-secondary);
+    }
+
+    .user-menu {
+        padding: 1rem 2rem;
+        display: flex;
+        justify-content: flex-start;
     }
 
     .hero-title {
@@ -757,5 +833,18 @@ body {
     
     .slider-nav {
         display: none;
+    }
+    
+    .search-modal-header {
+        padding: 1rem;
+    }
+    
+    .search-modal-input {
+        font-size: 1rem;
+        padding: 0.75rem 1rem;
+    }
+    
+    .search-modal-content {
+        padding: 1rem;
     }
 }
