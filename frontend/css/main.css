@@ -5,17 +5,17 @@
 }
 
 :root {
-    /* Modern Dark Theme with Teal/Cyan Accents */
-    --bg-primary: #0a0e1a;
-    --bg-secondary: #121827;
-    --bg-tertiary: #1a2332;
-    --accent-primary: #00d9ff;
-    --accent-secondary: #00ffc6;
-    --accent-hover: #00b8d4;
+    /* Cinema Theme with Red/Orange Accents */
+    --bg-primary: #0f0a0a;
+    --bg-secondary: #1a1212;
+    --bg-tertiary: #2a1f1f;
+    --accent-primary: #ff3333;
+    --accent-secondary: #ff6b35;
+    --accent-hover: #cc0000;
     --text-primary: #ffffff;
-    --text-secondary: #b4bcd0;
-    --text-muted: #6b7280;
-    --border-color: #2d3748;
+    --text-secondary: #d4b4b4;
+    --text-muted: #8b7070;
+    --border-color: #4a3030;
     --success: #10b981;
     --error: #ef4444;
     --warning: #f59e0b;
@@ -54,7 +54,7 @@ body {
     top: 0;
     left: 0;
     right: 0;
-    background: linear-gradient(to bottom, rgba(10, 14, 26, 0.95), transparent);
+    background: linear-gradient(to bottom, rgba(15, 10, 10, 0.95), transparent);
     backdrop-filter: blur(10px);
     z-index: 1000;
     transition: background 0.3s ease;
@@ -62,7 +62,7 @@ body {
 }
 
 .navbar.scrolled {
-    background: rgba(10, 14, 26, 0.98);
+    background: rgba(15, 10, 10, 0.98);
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
 }
 

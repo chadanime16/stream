@@ -1,4 +1,4 @@
 #!/bin/bash
 cd /app/backend
-echo "🚀 Starting StreamFlix Backend..."
+echo "🚀 Starting Chadcinema Backend..."
 python3 app.py

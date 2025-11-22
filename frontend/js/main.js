@@ -1,5 +1,8 @@
 // Main JavaScript for Homepage
 
+// Wait for DataManager to load
+let dataLoaded = false;
+
 // Create content card HTML
 function createContentCard(content) {
     const card = document.createElement('div');
@@ -50,9 +53,17 @@ function loadSlider(sliderId, contents) {
 // Load hero section
 async function loadHero() {
     try {
-        const trending = await API.content.getTrending(1);
-        if (trending && trending.length > 0) {
-            const hero = trending[0];
+        // Get trending IDs from backend
+        const trendingIds = await API.content.getTrending(1);
+        if (trendingIds && trendingIds.length > 0) {
+            // Match with local data
+            const hero = DataManager.getById(trendingIds[0]);
+            
+            if (!hero) {
+                console.warn('Hero content not found in local data');
+                return;
+            }
+            
             const heroSection = document.getElementById('heroSection');
             const heroTitle = document.getElementById('heroTitle');
             const heroDescription = document.getElementById('heroDescription');
@@ -66,7 +77,7 @@ async function loadHero() {
             
             // Set content
             heroTitle.textContent = hero.title;
-            heroDescription.textContent = hero.description || 'Watch now on StreamFlix';
+            heroDescription.textContent = hero.description || 'Watch now on Chadcinema';
             
             // Play button
             heroPlayBtn.onclick = () => {
@@ -96,46 +107,48 @@ async function loadHero() {
 // Load all content sections
 async function loadContent() {
     try {
-        // Load trending
-        const trending = await API.content.getTrending(20);
+        // Load trending - get IDs from backend, match with local data
+        const trendingIds = await API.content.getTrending(20);
+        const trending = DataManager.getByIds(trendingIds);
         loadSlider('trendingSlider', trending);
         
-        // Load anime
-        const anime = await API.content.getByCategory('Anime', 20);
+        // Load anime - get from local data
+        const anime = DataManager.getByCategory('Anime', 20);
         loadSlider('animeSlider', anime);
         
-        // Load Korean
-        const korean = await API.content.getByCategory('Korean', 20);
+        // Load Korean - get from local data
+        const korean = DataManager.getByCategory('Korean', 20);
         loadSlider('koreanSlider', korean);
         
-        // Load movies
-        const movies = await API.content.getByCategory('movie', 20);
+        // Load movies - get from local data
+        const movies = DataManager.getByCategory('movie', 20);
         loadSlider('moviesSlider', movies);
         
-        // Load series
-        const series = await API.content.getByCategory('series', 20);
+        // Load series - get from local data
+        const series = DataManager.getByCategory('series', 20);
         loadSlider('seriesSlider', series);
         
-        // Load Hollywood
-        const hollywood = await API.content.getByCategory('Hollywood', 20);
+        // Load Hollywood - get from local data
+        const hollywood = DataManager.getByCategory('Hollywood', 20);
         loadSlider('hollywoodSlider', hollywood);
         
-        // Load Bollywood
-        const bollywood = await API.content.getByCategory('Bollywood', 20);
+        // Load Bollywood - get from local data
+        const bollywood = DataManager.getByCategory('Bollywood', 20);
         loadSlider('bollywoodSlider', bollywood);
         
-        // Load South Indian
-        const south = await API.content.getByCategory('South Indian', 20);
+        // Load South Indian - get from local data
+        const south = DataManager.getByCategory('South Indian', 20);
         loadSlider('southSlider', south);
         
-        // Load Animation
-        const animation = await API.content.getByCategory('Animation', 20);
+        // Load Animation - get from local data
+        const animation = DataManager.getByCategory('Animation', 20);
         loadSlider('animationSlider', animation);
         
-        // Load recommendations if logged in
+        // Load recommendations if logged in - get IDs from backend
         if (Auth.isLoggedIn()) {
-            const recommendations = await API.user.getRecommendations();
-            if (recommendations && recommendations.length > 0) {
+            const recommendationIds = await API.user.getRecommendations();
+            if (recommendationIds && recommendationIds.length > 0) {
+                const recommendations = DataManager.getByIds(recommendationIds);
                 document.getElementById('recommendationsSection').style.display = 'block';
                 loadSlider('recommendationsSlider', recommendations);
             }
@@ -150,12 +163,13 @@ function setupSearch() {
     const searchInput = document.getElementById('searchInput');
     const searchBtn = document.getElementById('searchBtn');
     
-    async function performSearch() {
+    function performSearch() {
         const query = searchInput.value.trim();
         if (!query) return;
         
         try {
-            const results = await API.content.search(query);
+            // Search in local data
+            const results = DataManager.search(query);
             
             // Show results in a modal or redirect to search page
             // For now, show in trending section
@@ -193,8 +207,11 @@ function setupMyList() {
             }
             
             try {
-                const watchlist = await API.user.getWatchlist();
-                if (watchlist && watchlist.length > 0) {
+                // Get watchlist IDs from backend
+                const watchlistIds = await API.user.getWatchlist();
+                if (watchlistIds && watchlistIds.length > 0) {
+                    // Match with local data
+                    const watchlist = DataManager.getByIds(watchlistIds);
                     loadSlider('trendingSlider', watchlist);
                     document.querySelector('.row-header h3').textContent = '📌 My List';
                     showToast('Loaded your watchlist', 'success');
@@ -222,7 +239,7 @@ function setupNavbar() {
 }
 
 // Initialize page
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     // Initialize auth
     Auth.initAuthUI();
     Auth.setupModal();
@@ -231,6 +248,11 @@ document.addEventListener('DOMContentLoaded', () => {
     setupNavbar();
     setupSearch();
     setupMyList();
+    
+    // Load all JSON data into memory first
+    console.log('🚀 Loading content data...');
+    await DataManager.loadAllData();
+    dataLoaded = true;
     
     // Load content
     loadHero();

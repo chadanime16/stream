@@ -20,7 +20,20 @@ async function loadContentDetail() {
     }
     
     try {
-        const content = await API.content.getDetail(contentId);
+        // Load data manager first if not loaded
+        if (!DataManager.isLoaded) {
+            await DataManager.loadAllData();
+        }
+        
+        // Get content from local data
+        const content = DataManager.getById(contentId);
+        
+        if (!content) {
+            console.error('Content not found in local data');
+            document.getElementById('detailContainer').innerHTML = '<div class="detail-loading">Content not found</div>';
+            return;
+        }
+        
         currentContent = content;
         
         // Display content info

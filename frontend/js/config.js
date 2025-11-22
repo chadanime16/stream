@@ -1,6 +1,6 @@
 // API Configuration
 const CONFIG = {
-    API_BASE_URL: window.location.origin,
+    API_BASE_URL: 'http://localhost:8001',
     API_ENDPOINTS: {
         // Auth
         LOGIN: '/api/auth/login',
@@ -24,8 +24,8 @@ const CONFIG = {
     
     // Storage keys
     STORAGE_KEYS: {
-        TOKEN: 'streamflix_token',
-        USER: 'streamflix_user'
+        TOKEN: 'chadcinema_token',
+        USER: 'chadcinema_user'
     }
 };
 

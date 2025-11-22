@@ -334,7 +334,7 @@ def get_trending():
         limit = request.args.get('limit', 20)
         
         cursor.execute('''
-            SELECT id, watch_count FROM content 
+            SELECT id FROM content 
             ORDER BY watch_count DESC, created_at DESC 
             LIMIT ?
         ''', (limit,))
@@ -432,7 +432,7 @@ def search_content():
 @app.route('/api/user/watchlist', methods=['GET'])
 @auth_required
 def get_watchlist():
-    """Get user watchlist"""
+    """Get user watchlist IDs"""
     try:
         db = get_db()
         cursor = db.cursor()
@@ -444,19 +444,7 @@ def get_watchlist():
         
         watchlist_ids = parse_json_field(user['watchlist'], [])
         
-        if not watchlist_ids:
-            return jsonify([]), 200
-        
-        placeholders = ','.join(['?' for _ in watchlist_ids])
-        cursor.execute(f'SELECT * FROM content WHERE id IN ({placeholders})', watchlist_ids)
-        
-        watchlist = []
-        for row in cursor.fetchall():
-            item = dict_from_row(row)
-            item['genres'] = parse_json_field(item['genres'], [])
-            watchlist.append(item)
-        
-        return jsonify(watchlist), 200
+        return jsonify(watchlist_ids), 200
         
     except Exception as e:
         app.logger.error(f"Watchlist error: {e}")
@@ -586,7 +574,7 @@ def track_view():
 @app.route('/api/user/recommendations', methods=['GET'])
 @auth_required
 def get_recommendations():
-    """Get personalized recommendations based on watch history"""
+    """Get personalized recommendation IDs based on watch history"""
     try:
         db = get_db()
         cursor = db.cursor()
@@ -630,19 +618,15 @@ def get_recommendations():
         exclude_conditions = ' AND ' + ' AND '.join(['id != ?' for _ in watched_ids])
         
         cursor.execute(f'''
-            SELECT * FROM content 
+            SELECT id FROM content 
             WHERE ({genre_conditions}) {exclude_conditions}
             ORDER BY CAST(rating AS REAL) DESC, watch_count DESC 
             LIMIT 20
         ''', genre_params + watched_ids)
         
-        recommendations = []
-        for row in cursor.fetchall():
-            item = dict_from_row(row)
-            item['genres'] = parse_json_field(item['genres'], [])
-            recommendations.append(item)
+        recommendation_ids = [row['id'] for row in cursor.fetchall()]
         
-        return jsonify(recommendations), 200
+        return jsonify(recommendation_ids), 200
         
     except Exception as e:
         app.logger.error(f"Recommendations error: {e}")
@@ -651,7 +635,7 @@ def get_recommendations():
 @app.route('/api/user/history', methods=['GET'])
 @auth_required
 def get_history():
-    """Get user watch history"""
+    """Get user watch history with IDs and progress"""
     try:
         db = get_db()
         cursor = db.cursor()
@@ -663,33 +647,7 @@ def get_history():
         
         history = parse_json_field(user['history'], [])
         
-        if not history:
-            return jsonify([]), 200
-        
-        content_ids = [h['contentId'] for h in history if h.get('contentId')]
-        
-        if not content_ids:
-            return jsonify([]), 200
-        
-        placeholders = ','.join(['?' for _ in content_ids])
-        cursor.execute(f'SELECT * FROM content WHERE id IN ({placeholders})', content_ids)
-        
-        content_map = {}
-        for row in cursor.fetchall():
-            item = dict_from_row(row)
-            item['genres'] = parse_json_field(item['genres'], [])
-            content_map[item['id']] = item
-        
-        history_with_details = []
-        for h in history:
-            content_id = h['contentId']
-            if content_id in content_map:
-                item = content_map[content_id].copy()
-                item['progress'] = h.get('progress', 0)
-                item['lastWatched'] = h.get('timestamp')
-                history_with_details.append(item)
-        
-        return jsonify(history_with_details), 200
+        return jsonify(history), 200
         
     except Exception as e:
         app.logger.error(f"History error: {e}")
