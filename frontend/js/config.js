@@ -5,7 +5,7 @@
 //   - Production: 'https://your-backend-domain.com'
 //   - Custom port: 'http://your-domain.com:8001'
 const CONFIG = {
-    API_BASE_URL: 'https://cf41a3f1-e9f3-44db-b850-971e8883a055.preview.emergentagent.com',  // 👈 CHANGE THIS to your backend URL
+    API_BASE_URL: 'https://dynamic-hero-slides.preview.emergentagent.com',  // 👈 CHANGE THIS to your backend URL
     API_ENDPOINTS: {
         // Auth
         LOGIN: '/api/auth/login',
@@ -17,6 +17,14 @@ const CONFIG = {
         BY_CATEGORY: '/api/content/by-category',
         DETAIL: '/api/content/detail',
         SEARCH: '/api/content/search',
+        
+        // Weekly/Daily
+        WEEKLY_DAY: '/api/content/weekly',       // + /{day}
+        WEEKLY_TODAY: '/api/content/weekly/today',
+        WEEKLY_ALL: '/api/content/weekly/all',
+        
+        // Hero Carousel
+        HERO_CAROUSEL: '/api/hero/carousel',
         
         // User
         WATCHLIST: '/api/user/watchlist',

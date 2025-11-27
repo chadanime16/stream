@@ -1,8 +1,62 @@
 // Main JavaScript for Homepage
+ 
+// =============================================================================
+// CONFIGURABLE HERO CAROUSEL IDS (Fallback - can be overridden by API)
+// Set the IDs of content items to display in the hero carousel
+// These are used as fallback if the API returns no carousel items
+// =============================================================================
+const HERO_CAROUSEL_IDS = [
+    'tt1659337',    // The Perks of Being a Wallflower
+    'tt27543578',   // Good Fortune
+    'tt1312221'     // Frankenstein
+];
+
+// Carousel configuration
+const CAROUSEL_CONFIG = {
+    autoSlideInterval: 6000,  // Auto-slide every 6 seconds (set to 0 to disable)
+    transitionDuration: 600   // Transition duration in milliseconds
+};
+
+// Day names mapping
+const DAY_NAMES = {
+    0: 'sunday',
+    1: 'monday',
+    2: 'tuesday',
+    3: 'wednesday',
+    4: 'thursday',
+    5: 'friday',
+    6: 'saturday'
+};
+
+const DAY_FULL_NAMES = {
+    'monday': 'Monday',
+    'tuesday': 'Tuesday',
+    'wednesday': 'Wednesday',
+    'thursday': 'Thursday',
+    'friday': 'Friday',
+    'saturday': 'Saturday',
+    'sunday': 'Sunday'
+};
+
+// =============================================================================
 
 // Wait for DataManager to load
 let dataLoaded = false;
 let searchTimeout = null;
+
+// Carousel state
+let carouselState = {
+    currentSlide: 0,
+    totalSlides: 0,
+    autoSlideTimer: null,
+    isTransitioning: false
+};
+
+// Daily picks state
+let dailyPicksState = {
+    currentDay: DAY_NAMES[new Date().getDay()],
+    weeklyData: null
+};
 
 // Create content card HTML (horizontal/landscape image)
 function createContentCard(content) {
@@ -125,8 +179,269 @@ function setHeroContent(hero) {
     };
 }
 
-// Load hero section
+// Create a single hero slide HTML
+function createHeroSlide(content) {
+    const slide = document.createElement('div');
+    slide.className = 'hero-slide';
+    slide.setAttribute('data-testid', `hero-slide-${content.id}`);
+    
+    if (content.image) {
+        slide.style.backgroundImage = `url(${content.image})`;
+    }
+    
+    slide.innerHTML = `
+        <div class="hero-slide-overlay"></div>
+        <div class="hero-slide-content">
+            <h2 class="hero-slide-title">${content.title}</h2>
+            <p class="hero-slide-description">${content.description || 'Watch now on Chadcinema'}</p>
+            <div class="hero-slide-buttons">
+                <button class="btn btn-primary hero-play-btn" data-id="${content.id}" data-testid="hero-play-btn-${content.id}">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                        <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                    </svg>
+                    Play Now
+                </button>
+                <button class="btn btn-secondary hero-watchlist-btn" data-id="${content.id}" data-testid="hero-watchlist-btn-${content.id}">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 5v14M5 12h14"></path>
+                    </svg>
+                    My List
+                </button>
+            </div>
+        </div>
+    `;
+    
+    return slide;
+}
+
+// Create carousel indicator dot
+function createIndicatorDot(index) {
+    const dot = document.createElement('button');
+    dot.className = 'hero-indicator' + (index === 0 ? ' active' : '');
+    dot.setAttribute('data-testid', `hero-indicator-${index}`);
+    dot.setAttribute('data-index', index);
+    dot.setAttribute('aria-label', `Go to slide ${index + 1}`);
+    return dot;
+}
+
+// Navigate to specific slide
+function goToSlide(index) {
+    if (carouselState.isTransitioning) return;
+    if (index < 0) index = carouselState.totalSlides - 1;
+    if (index >= carouselState.totalSlides) index = 0;
+    
+    carouselState.isTransitioning = true;
+    carouselState.currentSlide = index;
+    
+    const slidesContainer = document.getElementById('heroSlides');
+    if (slidesContainer) {
+        slidesContainer.style.transform = `translateX(-${index * 100}%)`;
+    }
+    
+    // Update indicators
+    const indicators = document.querySelectorAll('.hero-indicator');
+    indicators.forEach((indicator, i) => {
+        indicator.classList.toggle('active', i === index);
+    });
+    
+    // Reset auto-slide timer
+    resetAutoSlideTimer();
+    
+    // Reset transitioning flag after animation completes
+    setTimeout(() => {
+        carouselState.isTransitioning = false;
+    }, CAROUSEL_CONFIG.transitionDuration);
+}
+
+// Go to next slide
+function nextSlide() {
+    goToSlide(carouselState.currentSlide + 1);
+}
+
+// Go to previous slide
+function prevSlide() {
+    goToSlide(carouselState.currentSlide - 1);
+}
+
+// Start auto-slide timer
+function startAutoSlideTimer() {
+    if (CAROUSEL_CONFIG.autoSlideInterval > 0 && carouselState.totalSlides > 1) {
+        carouselState.autoSlideTimer = setInterval(nextSlide, CAROUSEL_CONFIG.autoSlideInterval);
+    }
+}
+
+// Reset auto-slide timer
+function resetAutoSlideTimer() {
+    if (carouselState.autoSlideTimer) {
+        clearInterval(carouselState.autoSlideTimer);
+    }
+    startAutoSlideTimer();
+}
+
+// Stop auto-slide timer
+function stopAutoSlideTimer() {
+    if (carouselState.autoSlideTimer) {
+        clearInterval(carouselState.autoSlideTimer);
+        carouselState.autoSlideTimer = null;
+    }
+}
+
+// Setup carousel event listeners
+function setupCarouselEvents() {
+    const prevBtn = document.getElementById('heroPrev');
+    const nextBtn = document.getElementById('heroNext');
+    const indicators = document.getElementById('heroIndicators');
+    const carousel = document.getElementById('heroCarousel');
+    
+    // Navigation buttons
+    if (prevBtn) {
+        prevBtn.addEventListener('click', prevSlide);
+    }
+    if (nextBtn) {
+        nextBtn.addEventListener('click', nextSlide);
+    }
+    
+    // Indicator dots
+    if (indicators) {
+        indicators.addEventListener('click', (e) => {
+            const indicator = e.target.closest('.hero-indicator');
+            if (indicator) {
+                const index = parseInt(indicator.getAttribute('data-index'), 10);
+                goToSlide(index);
+            }
+        });
+    }
+    
+    // Pause auto-slide on hover
+    if (carousel) {
+        carousel.addEventListener('mouseenter', stopAutoSlideTimer);
+        carousel.addEventListener('mouseleave', startAutoSlideTimer);
+    }
+    
+    // Keyboard navigation
+    document.addEventListener('keydown', (e) => {
+        if (document.activeElement.tagName === 'INPUT') return;
+        
+        if (e.key === 'ArrowLeft') {
+            prevSlide();
+        } else if (e.key === 'ArrowRight') {
+            nextSlide();
+        }
+    });
+    
+    // Delegate click events for play and watchlist buttons
+    document.getElementById('heroSlides')?.addEventListener('click', async (e) => {
+        const playBtn = e.target.closest('.hero-play-btn');
+        const watchlistBtn = e.target.closest('.hero-watchlist-btn');
+        
+        if (playBtn) {
+            const contentId = playBtn.getAttribute('data-id');
+            window.location.href = `detail.html?id=${contentId}`;
+        }
+        
+        if (watchlistBtn) {
+            const contentId = watchlistBtn.getAttribute('data-id');
+            
+            if (!Auth.isLoggedIn()) {
+                document.getElementById('authModal').classList.add('show');
+                return;
+            }
+            
+            try {
+                await API.user.addToWatchlist(contentId);
+                showToast('Added to watchlist', 'success');
+            } catch (error) {
+                showToast(error.message, 'error');
+            }
+        }
+    });
+}
+
+// Load hero carousel
+async function loadHeroCarousel() {
+    const slidesContainer = document.getElementById('heroSlides');
+    const indicatorsContainer = document.getElementById('heroIndicators');
+    
+    if (!slidesContainer || !indicatorsContainer) {
+        console.warn('Hero carousel elements not found');
+        return;
+    }
+    
+    let carouselItems = [];
+    
+    // First, try to get carousel items from the API
+    try {
+        const response = await fetch(`${CONFIG.API_BASE_URL}/api/hero/carousel`);
+        if (response.ok) {
+            const apiCarouselIds = await response.json();
+            if (apiCarouselIds && apiCarouselIds.length > 0) {
+                carouselItems = DataManager.getByIds(apiCarouselIds);
+                console.log(`📺 Loaded ${carouselItems.length} items for hero carousel from API`);
+            }
+        }
+    } catch (error) {
+        console.warn('Could not fetch hero carousel from API:', error.message);
+    }
+    
+    // Fallback: Use configured IDs if API returned nothing
+    if (carouselItems.length === 0 && HERO_CAROUSEL_IDS && HERO_CAROUSEL_IDS.length > 0) {
+        carouselItems = DataManager.getByIds(HERO_CAROUSEL_IDS);
+        console.log(`📺 Loaded ${carouselItems.length} items for hero carousel from configured IDs`);
+    }
+    
+    // Fallback: if no items found from configured IDs, try trending
+    if (carouselItems.length === 0) {
+        try {
+            const trendingIds = await API.content.getTrending(5);
+            if (trendingIds && trendingIds.length > 0) {
+                carouselItems = DataManager.getByIds(trendingIds);
+            }
+        } catch (error) {
+            console.warn('Backend not available for trending, using random content:', error.message);
+        }
+    }
+    
+    // Final fallback: use random content from local data
+    if (carouselItems.length === 0) {
+        const allContent = DataManager.getAll();
+        // Get random 5 items
+        const shuffled = allContent.sort(() => 0.5 - Math.random());
+        carouselItems = shuffled.slice(0, 5);
+        console.log('📺 Using random content for hero carousel');
+    }
+    
+    // Clear existing content
+    slidesContainer.innerHTML = '';
+    indicatorsContainer.innerHTML = '';
+    
+    // Create slides and indicators
+    carouselItems.forEach((item, index) => {
+        slidesContainer.appendChild(createHeroSlide(item));
+        indicatorsContainer.appendChild(createIndicatorDot(index));
+    });
+    
+    // Update carousel state
+    carouselState.currentSlide = 0;
+    carouselState.totalSlides = carouselItems.length;
+    
+    // Setup carousel event listeners
+    setupCarouselEvents();
+    
+    // Start auto-slide
+    startAutoSlideTimer();
+    
+    console.log(`✅ Hero carousel initialized with ${carouselItems.length} slides`);
+}
+
+// Legacy: Load hero section (for backward compatibility if old structure exists)
 async function loadHero() {
+    // Check if we have the new carousel structure
+    const heroCarousel = document.getElementById('heroCarousel');
+    if (heroCarousel) {
+        return loadHeroCarousel();
+    }
+    
+    // Fallback to old hero section
     try {
         // Try to get trending IDs from backend first
         const trendingIds = await API.content.getTrending(1);
@@ -155,12 +470,163 @@ async function loadHero() {
 
 // Load all content sections
 async function loadContent() {
+    // Load daily picks section
+    await loadDailyPicks();
+    
+    // Load weekly series
+    await loadWeeklySeries();
+    
     // First, load all categories from local JSON data (always works)
     loadLocalCategories();
     
     // Then try to load backend-dependent sections (trending, recommendations)
     await loadBackendSections();
 }
+
+// =============================================================================
+// DAILY PICKS SECTION
+// =============================================================================
+
+// Load all weekly data
+async function loadWeeklyData() {
+    try {
+        const response = await fetch(`${CONFIG.API_BASE_URL}/api/content/weekly/all`);
+        if (response.ok) {
+            dailyPicksState.weeklyData = await response.json();
+            return dailyPicksState.weeklyData;
+        }
+    } catch (error) {
+        console.warn('Could not load weekly data:', error.message);
+    }
+    return null;
+}
+
+// Load daily picks for a specific day
+async function loadDayContent(day) {
+    const slider = document.getElementById('dailyPicksSlider');
+    const title = document.getElementById('dailyPicksTitle');
+    
+    if (!slider) return;
+    
+    // Update title
+    const today = DAY_NAMES[new Date().getDay()];
+    if (day === today) {
+        title.textContent = `📅 Today's Picks (${DAY_FULL_NAMES[day]})`;
+    } else {
+        title.textContent = `📅 ${DAY_FULL_NAMES[day]}'s Picks`;
+    }
+    
+    // Show loading
+    slider.innerHTML = '<div class="slider-loading">Loading...</div>';
+    
+    let contentIds = [];
+    
+    // Try to get from cached weekly data first
+    if (dailyPicksState.weeklyData && dailyPicksState.weeklyData[day]) {
+        contentIds = dailyPicksState.weeklyData[day];
+    } else {
+        // Fetch from API
+        try {
+            const response = await fetch(`${CONFIG.API_BASE_URL}/api/content/weekly/${day}`);
+            if (response.ok) {
+                contentIds = await response.json();
+            }
+        } catch (error) {
+            console.warn(`Could not load content for ${day}:`, error.message);
+        }
+    }
+    
+    // Get content items
+    let items = DataManager.getByIds(contentIds);
+    
+    // If no items for this day, show a message or hide
+    if (items.length === 0) {
+        slider.innerHTML = '<div class="slider-loading" style="color: var(--text-muted);">No picks for this day yet. Check back later!</div>';
+        return;
+    }
+    
+    // Load the slider
+    loadSlider('dailyPicksSlider', items);
+}
+
+// Setup day tabs
+function setupDayTabs() {
+    const tabsContainer = document.getElementById('dayTabs');
+    if (!tabsContainer) return;
+    
+    const today = DAY_NAMES[new Date().getDay()];
+    const tabs = tabsContainer.querySelectorAll('.day-tab');
+    
+    tabs.forEach(tab => {
+        const day = tab.getAttribute('data-day');
+        
+        // Mark today's tab
+        if (day === today) {
+            tab.classList.add('today');
+            tab.classList.add('active');
+        }
+        
+        // Add click handler
+        tab.addEventListener('click', () => {
+            // Update active state
+            tabs.forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            
+            // Load content for selected day
+            dailyPicksState.currentDay = day;
+            loadDayContent(day);
+        });
+    });
+}
+
+// Load daily picks section
+async function loadDailyPicks() {
+    const section = document.getElementById('dailyPicksSection');
+    if (!section) return;
+    
+    // Load all weekly data
+    await loadWeeklyData();
+    
+    // Setup day tabs
+    setupDayTabs();
+    
+    // Load today's content
+    const today = DAY_NAMES[new Date().getDay()];
+    await loadDayContent(today);
+    
+    console.log('✅ Daily picks section loaded');
+}
+
+// Load weekly series
+async function loadWeeklySeries() {
+    const section = document.getElementById('weeklySeriesSection');
+    const slider = document.getElementById('weeklySeriesSlider');
+    
+    if (!section || !slider) return;
+    
+    try {
+        const response = await fetch(`${CONFIG.API_BASE_URL}/api/content/weekly/series`);
+        if (response.ok) {
+            const seriesIds = await response.json();
+            if (seriesIds && seriesIds.length > 0) {
+                const series = DataManager.getByIds(seriesIds);
+                if (series.length > 0) {
+                    loadSlider('weeklySeriesSlider', series);
+                    section.style.display = 'block';
+                    console.log('✅ Weekly series section loaded');
+                    return;
+                }
+            }
+        }
+    } catch (error) {
+        console.warn('Could not load weekly series:', error.message);
+    }
+    
+    // Hide section if no data
+    section.style.display = 'none';
+}
+
+// =============================================================================
 
 // Load categories from local JSON data - always works even without backend
 function loadLocalCategories() {

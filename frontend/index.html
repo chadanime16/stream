@@ -68,31 +68,62 @@
         </div>
     </nav>
 
-    <!-- Hero Section -->
-    <section class="hero" id="heroSection">
-        <div class="hero-content">
-            <h2 class="hero-title" id="heroTitle">Loading...</h2>
-            <p class="hero-description" id="heroDescription"></p>
-            <div class="hero-buttons">
-                <button class="btn btn-primary" id="heroPlayBtn">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                        <polygon points="5 3 19 12 5 21 5 3"></polygon>
-                    </svg>
-                    Play Now
-                </button>
-                <button class="btn btn-secondary" id="heroWatchlistBtn">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M12 5v14M5 12h14"></path>
-                    </svg>
-                    My List
-                </button>
-            </div>
+    <!-- Hero Carousel Section -->
+    <section class="hero-carousel" id="heroCarousel">
+        <div class="hero-slides" id="heroSlides">
+            <!-- Slides will be dynamically injected here -->
         </div>
-        <div class="hero-overlay"></div>
+        
+        <!-- Carousel Navigation Arrows -->
+        <button class="hero-nav hero-nav-prev" id="heroPrev" data-testid="hero-prev-btn">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M15 18l-6-6 6-6"/>
+            </svg>
+        </button>
+        <button class="hero-nav hero-nav-next" id="heroNext" data-testid="hero-next-btn">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M9 18l6-6-6-6"/>
+            </svg>
+        </button>
+        
+        <!-- Carousel Indicators (Dots) -->
+        <div class="hero-indicators" id="heroIndicators" data-testid="hero-indicators">
+            <!-- Dots will be dynamically injected here -->
+        </div>
     </section>
 
     <!-- Content Sections -->
     <main class="main-content">
+        <!-- Day-wise Recommendations (Today's Picks) -->
+        <section class="content-row daily-picks-section" id="dailyPicksSection">
+            <div class="row-header">
+                <h3 id="dailyPicksTitle">📅 Today's Picks</h3>
+            </div>
+            <!-- Day selector tabs -->
+            <div class="day-tabs" id="dayTabs" data-testid="day-tabs">
+                <button class="day-tab" data-day="monday" data-testid="day-tab-monday">Mon</button>
+                <button class="day-tab" data-day="tuesday" data-testid="day-tab-tuesday">Tue</button>
+                <button class="day-tab" data-day="wednesday" data-testid="day-tab-wednesday">Wed</button>
+                <button class="day-tab" data-day="thursday" data-testid="day-tab-thursday">Thu</button>
+                <button class="day-tab" data-day="friday" data-testid="day-tab-friday">Fri</button>
+                <button class="day-tab" data-day="saturday" data-testid="day-tab-saturday">Sat</button>
+                <button class="day-tab" data-day="sunday" data-testid="day-tab-sunday">Sun</button>
+            </div>
+            <div class="content-slider" id="dailyPicksSlider" data-testid="daily-picks-slider">
+                <div class="slider-loading">Loading today's picks...</div>
+            </div>
+        </section>
+
+        <!-- Weekly Series -->
+        <section class="content-row" id="weeklySeriesSection" style="display: none;">
+            <div class="row-header">
+                <h3>📺 This Week's Series</h3>
+            </div>
+            <div class="content-slider" id="weeklySeriesSlider">
+                <div class="slider-loading">Loading...</div>
+            </div>
+        </section>
+
         <!-- Trending -->
         <section class="content-row">
             <div class="row-header">

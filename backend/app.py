@@ -89,6 +89,29 @@ def init_database():
         )
     ''')
     
+    # Weekly assignments table for day-wise recommendations
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS weekly_assignments (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            week TEXT NOT NULL,
+            day TEXT NOT NULL,
+            content_id TEXT,
+            content_type TEXT DEFAULT 'movie',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
+    
+    # Hero carousel IDs table
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS hero_carousel (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            content_id TEXT NOT NULL,
+            position INTEGER DEFAULT 0,
+            is_active INTEGER DEFAULT 1,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
+    
     # Create indexes
     cursor.execute('CREATE INDEX IF NOT EXISTS idx_users_email ON users(email)')
     cursor.execute('CREATE INDEX IF NOT EXISTS idx_users_username ON users(username)')
@@ -98,6 +121,8 @@ def init_database():
     cursor.execute('CREATE INDEX IF NOT EXISTS idx_content_industry ON content(industry)')
     cursor.execute('CREATE INDEX IF NOT EXISTS idx_user_watches_user_id ON user_watches(user_id)')
     cursor.execute('CREATE INDEX IF NOT EXISTS idx_user_watches_content_id ON user_watches(content_id)')
+    cursor.execute('CREATE INDEX IF NOT EXISTS idx_weekly_assignments_week_day ON weekly_assignments(week, day)')
+    cursor.execute('CREATE INDEX IF NOT EXISTS idx_hero_carousel_active ON hero_carousel(is_active)')
     
     conn.commit()
     conn.close()
@@ -650,6 +675,493 @@ def get_history():
 @app.route('/api/health', methods=['GET'])
 def health_check():
     return jsonify({'status': 'healthy', 'timestamp': datetime.utcnow().isoformat()}), 200
+
+# ============= WEEKLY ASSIGNMENTS ROUTES =============
+
+# Cache for weekly assignments
+weekly_cache = {
+    'week': None,
+    'assignments': {}
+}
+
+def get_current_week():
+    """Get current ISO week number"""
+    return datetime.utcnow().strftime('%Y-%W')
+
+def get_current_day():
+    """Get current day name (lowercase)"""
+    return datetime.utcnow().strftime('%A').lower()
+
+@app.route('/api/content/weekly/<day>', methods=['GET'])
+def get_weekly_content(day):
+    """Get content IDs for a specific day of the week"""
+    try:
+        valid_days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday', 'series']
+        if day.lower() not in valid_days:
+            return jsonify({'error': 'Invalid day'}), 400
+        
+        db = get_db()
+        cursor = db.cursor()
+        
+        current_week = get_current_week()
+        
+        cursor.execute('''
+            SELECT content_id FROM weekly_assignments 
+            WHERE week = ? AND day = ?
+            ORDER BY id ASC
+        ''', (current_week, day.lower()))
+        
+        content_ids = [row['content_id'] for row in cursor.fetchall() if row['content_id']]
+        
+        return jsonify(content_ids), 200
+        
+    except Exception as e:
+        app.logger.error(f"Weekly content error: {e}")
+        return jsonify({'error': 'Internal server error'}), 500
+
+@app.route('/api/content/weekly/today', methods=['GET'])
+def get_today_content():
+    """Get content IDs for today"""
+    try:
+        current_day = get_current_day()
+        return get_weekly_content(current_day)
+    except Exception as e:
+        app.logger.error(f"Today content error: {e}")
+        return jsonify({'error': 'Internal server error'}), 500
+
+@app.route('/api/content/weekly/all', methods=['GET'])
+def get_all_weekly_content():
+    """Get all weekly assignments"""
+    try:
+        db = get_db()
+        cursor = db.cursor()
+        
+        current_week = get_current_week()
+        
+        cursor.execute('''
+            SELECT day, content_id FROM weekly_assignments 
+            WHERE week = ?
+            ORDER BY id ASC
+        ''', (current_week,))
+        
+        result = {
+            'monday': [],
+            'tuesday': [],
+            'wednesday': [],
+            'thursday': [],
+            'friday': [],
+            'saturday': [],
+            'sunday': [],
+            'series': []
+        }
+        
+        for row in cursor.fetchall():
+            day = row['day']
+            content_id = row['content_id']
+            if day in result and content_id:
+                result[day].append(content_id)
+        
+        return jsonify(result), 200
+        
+    except Exception as e:
+        app.logger.error(f"All weekly content error: {e}")
+        return jsonify({'error': 'Internal server error'}), 500
+
+# ============= HERO CAROUSEL ROUTES =============
+
+@app.route('/api/hero/carousel', methods=['GET'])
+def get_hero_carousel():
+    """Get hero carousel content IDs"""
+    try:
+        db = get_db()
+        cursor = db.cursor()
+        
+        cursor.execute('''
+            SELECT content_id FROM hero_carousel 
+            WHERE is_active = 1
+            ORDER BY position ASC
+        ''')
+        
+        content_ids = [row['content_id'] for row in cursor.fetchall() if row['content_id']]
+        
+        return jsonify(content_ids), 200
+        
+    except Exception as e:
+        app.logger.error(f"Hero carousel error: {e}")
+        return jsonify({'error': 'Internal server error'}), 500
+
+@app.route('/api/admin/hero/carousel', methods=['POST'])
+def update_hero_carousel():
+    """Update hero carousel content IDs"""
+    try:
+        data = request.get_json()
+        content_ids = data.get('content_ids', [])
+        
+        db = get_db()
+        cursor = db.cursor()
+        
+        # Clear existing
+        cursor.execute('DELETE FROM hero_carousel')
+        
+        # Insert new
+        for position, content_id in enumerate(content_ids):
+            if content_id:
+                cursor.execute('''
+                    INSERT INTO hero_carousel (content_id, position, is_active)
+                    VALUES (?, ?, 1)
+                ''', (content_id, position))
+        
+        db.commit()
+        return jsonify({'success': True}), 200
+        
+    except Exception as e:
+        app.logger.error(f"Update hero carousel error: {e}")
+        return jsonify({'error': 'Internal server error'}), 500
+
+# ============= ADMIN ROUTES =============
+
+@app.route('/api/admin/weekly-assignments', methods=['GET'])
+def get_admin_weekly_assignments():
+    """Get all weekly assignments for admin"""
+    try:
+        db = get_db()
+        cursor = db.cursor()
+        
+        current_week = get_current_week()
+        
+        cursor.execute('''
+            SELECT * FROM weekly_assignments WHERE week = ?
+        ''', (current_week,))
+        
+        result = {
+            'monday': [],
+            'tuesday': [],
+            'wednesday': [],
+            'thursday': [],
+            'friday': [],
+            'saturday': [],
+            'sunday': [],
+            'series': []
+        }
+        
+        for row in cursor.fetchall():
+            day = row['day']
+            content_id = row['content_id']
+            if day in result and content_id:
+                result[day].append(content_id)
+        
+        return jsonify(result), 200
+        
+    except Exception as e:
+        app.logger.error(f"Admin weekly error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/admin/weekly-assignments', methods=['POST'])
+def post_admin_weekly_assignments():
+    """Update weekly assignments for a specific day"""
+    try:
+        data = request.get_json()
+        day = data.get('day')
+        content_ids = data.get('content_ids', [])
+        
+        valid_days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday', 'series']
+        if day not in valid_days:
+            return jsonify({'error': 'Invalid day'}), 400
+        
+        db = get_db()
+        cursor = db.cursor()
+        
+        current_week = get_current_week()
+        
+        # Clear existing assignments for this day and week
+        cursor.execute('''
+            DELETE FROM weekly_assignments 
+            WHERE week = ? AND day = ?
+        ''', (current_week, day))
+        
+        # Insert new assignments
+        for content_id in content_ids:
+            if content_id and content_id.strip():
+                cursor.execute('''
+                    INSERT INTO weekly_assignments (week, day, content_id)
+                    VALUES (?, ?, ?)
+                ''', (current_week, day, content_id.strip()))
+        
+        db.commit()
+        
+        # Update cache
+        weekly_cache['week'] = current_week
+        if 'assignments' not in weekly_cache:
+            weekly_cache['assignments'] = {}
+        weekly_cache['assignments'][day] = content_ids
+        
+        return jsonify({'success': True}), 200
+        
+    except Exception as e:
+        app.logger.error(f"Post weekly error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+# Admin Weekly Editor Page
+@app.route('/admin/weekly-editor', methods=['GET'])
+def admin_weekly_editor():
+    """Admin page to edit weekly suggestions"""
+    days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
+    return '''
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Weekly Suggestions Editor - Chadcinema Admin</title>
+        <style>
+            * { box-sizing: border-box; margin: 0; padding: 0; }
+            body { 
+                font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; 
+                background: #0f0a0a; 
+                color: #fff;
+                min-height: 100vh;
+                padding: 2rem;
+            }
+            h2 { 
+                font-size: 2rem;
+                margin-bottom: 1.5rem;
+                background: linear-gradient(135deg, #ff3333, #ff6b35);
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+            }
+            h3 {
+                font-size: 1.25rem;
+                margin: 2rem 0 1rem;
+                color: #ff6b35;
+            }
+            .container { max-width: 1000px; margin: 0 auto; }
+            .assignment-row { 
+                margin-bottom: 1.5rem; 
+                padding: 1.5rem;
+                background: #1a1212;
+                border-radius: 12px;
+                border: 1px solid #4a3030;
+            }
+            .assignment-row b { 
+                color: #ff3333; 
+                font-size: 1.1rem;
+                display: block;
+                margin-bottom: 0.75rem;
+            }
+            label { 
+                color: #d4b4b4; 
+                display: block;
+                margin-bottom: 0.5rem;
+                font-size: 0.9rem;
+            }
+            input[type="text"] { 
+                width: 100%;
+                padding: 0.75rem 1rem;
+                background: #2a1f1f;
+                border: 1px solid #4a3030;
+                border-radius: 8px;
+                color: #fff;
+                font-size: 1rem;
+                margin-bottom: 0.75rem;
+                transition: border-color 0.3s;
+            }
+            input[type="text"]:focus {
+                outline: none;
+                border-color: #ff3333;
+            }
+            button { 
+                padding: 0.75rem 1.5rem;
+                background: linear-gradient(135deg, #ff3333, #ff6b35);
+                color: #0f0a0a;
+                border: none;
+                border-radius: 8px;
+                cursor: pointer;
+                font-weight: 600;
+                font-size: 0.9rem;
+                transition: transform 0.2s, box-shadow 0.2s;
+            }
+            button:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 5px 20px rgba(255, 51, 51, 0.3);
+            }
+            .success { color: #10b981; margin-left: 1rem; }
+            .error { color: #ef4444; margin-left: 1rem; }
+            #assignments { 
+                background: #1a1212; 
+                padding: 1.5rem;
+                border-radius: 12px;
+                border: 1px solid #4a3030;
+                line-height: 1.8;
+            }
+            #assignments b { color: #ff6b35; }
+            .hero-section {
+                background: linear-gradient(135deg, #2a1f1f, #1a1212);
+                padding: 1.5rem;
+                border-radius: 12px;
+                border: 1px solid #ff3333;
+                margin-bottom: 2rem;
+            }
+            .hero-section h3 {
+                margin-top: 0;
+                color: #ff3333;
+            }
+            .back-link {
+                display: inline-block;
+                color: #ff6b35;
+                text-decoration: none;
+                margin-bottom: 1.5rem;
+            }
+            .back-link:hover { text-decoration: underline; }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <a href="/" class="back-link">← Back to Chadcinema</a>
+            <h2>Weekly Suggestions Editor</h2>
+            
+            <div class="hero-section">
+                <h3>Hero Carousel IDs</h3>
+                <label>Content IDs for hero carousel (comma separated):</label>
+                <input id="hero_ids" type="text" placeholder="tt1659337, tt27543578, tt1312221">
+                <button onclick="updateHeroCarousel()">Update Hero Carousel</button>
+                <span id="msg_hero"></span>
+            </div>
+            
+            <h3>Day-wise Recommendations</h3>
+            ''' + '\n'.join([f'''
+            <div class="assignment-row">
+                <b>{d.title()}</b>
+                <label>Content IDs (comma separated):</label>
+                <input id="{d}_ids" type="text" placeholder="tt1234567, tt7654321">
+                <button onclick="updateAssignment('{d}')">Update {d.title()}</button>
+                <span id="msg_{d}"></span>
+            </div>
+            ''' for d in days]) + '''
+            <div class="assignment-row">
+                <b>Series (for the week)</b>
+                <label>Series IDs (comma separated):</label>
+                <input id="series_ids" type="text" placeholder="tt1234567, tt7654321">
+                <button onclick="updateAssignment('series')">Update Series</button>
+                <span id="msg_series"></span>
+            </div>
+            
+            <h3>Current Assignments</h3>
+            <div id="assignments">Loading...</div>
+        </div>
+        
+        <script>
+        const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+        
+        // Determine API base URL - handles both local and preview environments
+        function getApiBaseUrl() {
+            const currentUrl = window.location.href;
+            // If we're on the preview URL, use the configured backend URL
+            if (currentUrl.includes('preview.emergentagent.com')) {
+                // Extract the backend URL from the preview pattern
+                // or use a hardcoded preview backend URL
+                return 'https://dynamic-hero-slides.preview.emergentagent.com';
+            }
+            // Local development - use relative URLs
+            return '';
+        }
+        
+        const API_BASE = getApiBaseUrl();
+        
+        async function loadAssignments() {
+            try {
+                // Load weekly assignments
+                const res = await fetch(API_BASE + '/api/admin/weekly-assignments');
+                const assignments = await res.json();
+                
+                // Fill inputs
+                for (const day of days) {
+                    const input = document.getElementById(day + '_ids');
+                    if (input) {
+                        input.value = (assignments[day] || []).join(', ');
+                    }
+                }
+                document.getElementById('series_ids').value = (assignments['series'] || []).join(', ');
+                
+                // Display assignments
+                let html = '';
+                for (const day of days) {
+                    const ids = assignments[day] || [];
+                    html += `<b>${day.charAt(0).toUpperCase() + day.slice(1)}:</b> ${ids.length > 0 ? ids.join(', ') : '<em style="color:#8b7070">Not set</em>'}<br>`;
+                }
+                html += `<b>Series:</b> ${(assignments['series'] || []).length > 0 ? assignments['series'].join(', ') : '<em style="color:#8b7070">Not set</em>'}`;
+                document.getElementById('assignments').innerHTML = html;
+                
+                // Load hero carousel
+                const heroRes = await fetch(API_BASE + '/api/hero/carousel');
+                const heroIds = await heroRes.json();
+                document.getElementById('hero_ids').value = heroIds.join(', ');
+            } catch (error) {
+                console.error('Load error:', error);
+                document.getElementById('assignments').innerHTML = '<span class="error">Failed to load assignments</span>';
+            }
+        }
+        
+        async function updateAssignment(day) {
+            const inputId = day === 'series' ? 'series_ids' : day + '_ids';
+            const content_ids = document.getElementById(inputId)?.value.split(',').map(x => x.trim()).filter(x => x);
+            
+            try {
+                const res = await fetch(API_BASE + '/api/admin/weekly-assignments', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ day, content_ids })
+                });
+                
+                const result = await res.json();
+                const msgEl = document.getElementById('msg_' + day);
+                
+                if (result.success) {
+                    msgEl.textContent = 'Updated!';
+                    msgEl.className = 'success';
+                    loadAssignments();
+                } else {
+                    msgEl.textContent = 'Error: ' + (result.error || 'Unknown');
+                    msgEl.className = 'error';
+                }
+                
+                setTimeout(() => { msgEl.textContent = ''; }, 3000);
+            } catch (error) {
+                console.error('Update error:', error);
+            }
+        }
+        
+        async function updateHeroCarousel() {
+            const content_ids = document.getElementById('hero_ids')?.value.split(',').map(x => x.trim()).filter(x => x);
+            
+            try {
+                const res = await fetch(API_BASE + '/api/admin/hero/carousel', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ content_ids })
+                });
+                
+                const result = await res.json();
+                const msgEl = document.getElementById('msg_hero');
+                
+                if (result.success) {
+                    msgEl.textContent = 'Updated!';
+                    msgEl.className = 'success';
+                } else {
+                    msgEl.textContent = 'Error: ' + (result.error || 'Unknown');
+                    msgEl.className = 'error';
+                }
+                
+                setTimeout(() => { msgEl.textContent = ''; }, 3000);
+            } catch (error) {
+                console.error('Update error:', error);
+            }
+        }
+        
+        window.onload = loadAssignments;
+        </script>
+    </body>
+    </html>
+    '''
 
 if __name__ == '__main__':
     # Initialize database
