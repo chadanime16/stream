@@ -698,6 +698,46 @@ function setupSearch() {
     });
 }
 
+// Mobile menu toggle
+function setupMobileMenu() {
+    const mobileMenuToggle = document.getElementById('mobileMenuToggle');
+    const mobileSearchIcon = document.getElementById('mobileSearchIcon');
+    const navMenu = document.getElementById('navMenu');
+    const searchModal = document.getElementById('searchModal');
+    const searchModalInput = document.getElementById('searchModalInput');
+    
+    if (mobileMenuToggle && navMenu) {
+        mobileMenuToggle.addEventListener('click', (e) => {
+            e.stopPropagation();
+            navMenu.classList.toggle('active');
+        });
+    }
+    
+    if (mobileSearchIcon && searchModal && searchModalInput) {
+        mobileSearchIcon.addEventListener('click', () => {
+            searchModal.classList.add('show');
+            searchModalInput.focus();
+        });
+    }
+    
+    // Close menu when clicking outside
+    document.addEventListener('click', (e) => {
+        if (navMenu && !navMenu.contains(e.target) && mobileMenuToggle && !mobileMenuToggle.contains(e.target)) {
+            navMenu.classList.remove('active');
+        }
+    });
+    
+    // Close menu when clicking a link
+    if (navMenu) {
+        const navLinks = navMenu.querySelectorAll('.nav-link');
+        navLinks.forEach(link => {
+            link.addEventListener('click', () => {
+                navMenu.classList.remove('active');
+            });
+        });
+    }
+}
+
 // Initialize page
 document.addEventListener('DOMContentLoaded', () => {
     // Initialize auth
@@ -709,6 +749,9 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Setup search modal
     setupSearchModal();
+    
+    // Setup mobile menu
+    setupMobileMenu();
     
     // Load content ONCE
     loadContentDetail();

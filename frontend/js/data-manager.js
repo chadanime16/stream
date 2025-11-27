@@ -144,25 +144,152 @@ const DataManager = {
         return results;
     },
     
-    // Search content
-    search(query) {
-        if (!query) return [];
+    // Calculate similarity score between two strings (0-1)
+    calculateSimilarity(str1, str2) {
+        if (!str1 || !str2 || typeof str1 !== 'string' || typeof str2 !== 'string') return 0;
         
-        const lowerQuery = query.toLowerCase();
-        const results = [];
+        const s1 = str1.toLowerCase();
+        const s2 = str2.toLowerCase();
+        
+        // Exact match gets highest score
+        if (s1 === s2) return 1.0;
+        
+        // Check if one contains the other
+        if (s1.includes(s2) || s2.includes(s1)) return 0.9;
+        
+        // Calculate character matching score
+        let matches = 0;
+        let totalChars = Math.max(s1.length, s2.length);
+        
+        // Count matching characters in order
+        let i = 0, j = 0;
+        while (i < s1.length && j < s2.length) {
+            if (s1[i] === s2[j]) {
+                matches++;
+                j++;
+            }
+            i++;
+        }
+        
+        return matches / totalChars;
+    },
+    
+    // Normalize search query (remove special chars, extra spaces)
+    normalizeString(str) {
+        if (!str || typeof str !== 'string') return '';
+        return str.toLowerCase()
+            .replace(/[^\w\s]/g, '') // Remove special characters
+            .replace(/\s+/g, ' ')     // Normalize spaces
+            .trim();
+    },
+    
+    // Search content with fuzzy matching and scoring
+    search(query, limit = 50) {
+        if (!query || typeof query !== 'string') return [];
+        
+        const normalizedQuery = this.normalizeString(query);
+        if (!normalizedQuery) return [];
+        const queryWords = normalizedQuery.split(' ');
+        const scoredResults = [];
         
         for (const item of this.contentMap.values()) {
-            const title = (item.title || '').toLowerCase();
-            const description = (item.description || '').toLowerCase();
-            const genres = (item.genres || []).join(' ').toLowerCase();
+            let score = 0;
+            let maxScore = 0;
             
-            if (title.includes(lowerQuery) || description.includes(lowerQuery) || genres.includes(lowerQuery)) {
-                results.push(item);
-                if (results.length >= 50) break;
+            // Search in title (highest priority)
+            const title = this.normalizeString(item.title || '');
+            const titleSimilarity = this.calculateSimilarity(title, normalizedQuery);
+            if (titleSimilarity > 0.3) {
+                score += titleSimilarity * 10; // Title matches get 10x weight
+                maxScore = Math.max(maxScore, titleSimilarity);
+            }
+            
+            // Check each query word against title
+            queryWords.forEach(word => {
+                if (title.includes(word)) {
+                    score += 3;
+                }
+            });
+            
+            // Search in genres
+            const genres = Array.isArray(item.genres) ? item.genres : [];
+            genres.forEach(genre => {
+                const genreNorm = this.normalizeString(genre);
+                const genreSimilarity = this.calculateSimilarity(genreNorm, normalizedQuery);
+                if (genreSimilarity > 0.5) {
+                    score += genreSimilarity * 5; // Genre matches get 5x weight
+                    maxScore = Math.max(maxScore, genreSimilarity);
+                }
+                
+                // Check if genre contains any query word
+                queryWords.forEach(word => {
+                    if (genreNorm.includes(word)) {
+                        score += 2;
+                    }
+                });
+            });
+            
+            // Search in director
+            if (item.director) {
+                const director = this.normalizeString(item.director);
+                const directorSimilarity = this.calculateSimilarity(director, normalizedQuery);
+                if (directorSimilarity > 0.5) {
+                    score += directorSimilarity * 4; // Director matches get 4x weight
+                    maxScore = Math.max(maxScore, directorSimilarity);
+                }
+                
+                queryWords.forEach(word => {
+                    if (director.includes(word)) {
+                        score += 2;
+                    }
+                });
+            }
+            
+            // Search in cast
+            const cast = Array.isArray(item.cast) ? item.cast : [];
+            cast.forEach(actor => {
+                const actorNorm = this.normalizeString(actor);
+                const actorSimilarity = this.calculateSimilarity(actorNorm, normalizedQuery);
+                if (actorSimilarity > 0.5) {
+                    score += actorSimilarity * 3; // Cast matches get 3x weight
+                    maxScore = Math.max(maxScore, actorSimilarity);
+                }
+                
+                queryWords.forEach(word => {
+                    if (actorNorm.includes(word)) {
+                        score += 1.5;
+                    }
+                });
+            });
+            
+            // Search in description (lower priority)
+            const description = this.normalizeString(item.description || '');
+            queryWords.forEach(word => {
+                if (description.includes(word)) {
+                    score += 0.5; // Description matches get lower weight
+                }
+            });
+            
+            // If there's any score, add to results
+            if (score > 0) {
+                scoredResults.push({
+                    item: item,
+                    score: score,
+                    maxSimilarity: maxScore
+                });
             }
         }
         
-        return results;
+        // Sort by score (highest first), then by max similarity
+        scoredResults.sort((a, b) => {
+            if (Math.abs(b.score - a.score) > 0.1) {
+                return b.score - a.score;
+            }
+            return b.maxSimilarity - a.maxSimilarity;
+        });
+        
+        // Return top results
+        return scoredResults.slice(0, limit).map(r => r.item);
     },
     
     // Get random content for hero

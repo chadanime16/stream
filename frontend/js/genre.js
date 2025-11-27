@@ -272,14 +272,14 @@ function setupMobileMenu() {
     const searchModal = document.getElementById('searchModal');
     const searchModalInput = document.getElementById('searchModalInput');
     
-    if (mobileMenuToggle) {
+    if (mobileMenuToggle && navMenu) {
         mobileMenuToggle.addEventListener('click', (e) => {
             e.stopPropagation();
             navMenu.classList.toggle('active');
         });
     }
     
-    if (mobileSearchIcon) {
+    if (mobileSearchIcon && searchModal && searchModalInput) {
         mobileSearchIcon.addEventListener('click', () => {
             searchModal.classList.add('show');
             searchModalInput.focus();
@@ -294,12 +294,14 @@ function setupMobileMenu() {
     });
     
     // Close menu when clicking a link
-    const navLinks = document.querySelectorAll('.nav-link');
-    navLinks.forEach(link => {
-        link.addEventListener('click', () => {
-            navMenu.classList.remove('active');
+    if (navMenu) {
+        const navLinks = navMenu.querySelectorAll('.nav-link');
+        navLinks.forEach(link => {
+            link.addEventListener('click', () => {
+                navMenu.classList.remove('active');
+            });
         });
-    });
+    }
 }
 
 // Watchlist Modal functionality

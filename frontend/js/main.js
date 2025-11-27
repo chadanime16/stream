@@ -449,14 +449,14 @@ function setupMobileMenu() {
     const searchModal = document.getElementById('searchModal');
     const searchModalInput = document.getElementById('searchModalInput');
     
-    if (mobileMenuToggle) {
+    if (mobileMenuToggle && navMenu) {
         mobileMenuToggle.addEventListener('click', (e) => {
             e.stopPropagation();
             navMenu.classList.toggle('active');
         });
     }
     
-    if (mobileSearchIcon) {
+    if (mobileSearchIcon && searchModal && searchModalInput) {
         mobileSearchIcon.addEventListener('click', () => {
             searchModal.classList.add('show');
             searchModalInput.focus();
@@ -471,12 +471,14 @@ function setupMobileMenu() {
     });
     
     // Close menu when clicking a link
-    const navLinks = document.querySelectorAll('.nav-link');
-    navLinks.forEach(link => {
-        link.addEventListener('click', () => {
-            navMenu.classList.remove('active');
+    if (navMenu) {
+        const navLinks = navMenu.querySelectorAll('.nav-link');
+        navLinks.forEach(link => {
+            link.addEventListener('click', () => {
+                navMenu.classList.remove('active');
+            });
         });
-    });
+    }
 }
 
 // Initialize page
@@ -485,15 +487,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     Auth.initAuthUI();
     Auth.setupModal();
     
+    // Create search modal FIRST (before setupMobileMenu needs it)
+    createSearchModal();
+    
     // Setup features
     setupNavbar();
     setupSearch();
     setupMyList();
     setupMobileMenu();
     setupWatchlistModal();
-    
-    // Create search modal
-    createSearchModal();
     
     // Load all JSON data into memory first (with localStorage caching)
     console.log('🚀 Loading content data...');
