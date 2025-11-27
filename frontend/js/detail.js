@@ -738,6 +738,91 @@ function setupMobileMenu() {
     }
 }
 
+// Watchlist Modal functionality
+function setupWatchlistModal() {
+    const myWatchlistBtn = document.getElementById('myWatchlistBtn');
+    const watchlistModal = document.getElementById('watchlistModal');
+    const watchlistModalClose = document.getElementById('watchlistModalClose');
+    const watchlistGrid = document.getElementById('watchlistGrid');
+    
+    // Open watchlist modal
+    if (myWatchlistBtn) {
+        myWatchlistBtn.addEventListener('click', async () => {
+            if (!Auth.isLoggedIn()) {
+                document.getElementById('authModal').classList.add('show');
+                return;
+            }
+            
+            // Show modal
+            watchlistModal.classList.add('show');
+            
+            // Load watchlist
+            watchlistGrid.innerHTML = '<div class="loading-message">Loading your watchlist...</div>';
+            
+            try {
+                const watchlistIds = await API.user.getWatchlist();
+                
+                if (!watchlistIds || watchlistIds.length === 0) {
+                    watchlistGrid.innerHTML = `
+                        <div class="watchlist-empty">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+                            </svg>
+                            <h3>Your watchlist is empty</h3>
+                            <p>Add movies and series to your watchlist to watch them later</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                // Match with local data
+                const watchlistItems = DataManager.getByIds(watchlistIds);
+                
+                if (watchlistItems.length === 0) {
+                    watchlistGrid.innerHTML = `
+                        <div class="watchlist-empty">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+                            </svg>
+                            <h3>Your watchlist is empty</h3>
+                            <p>Add movies and series to your watchlist to watch them later</p>
+                        </div>
+                    `;
+                } else {
+                    watchlistGrid.innerHTML = '';
+                    watchlistItems.forEach(item => {
+                        watchlistGrid.appendChild(createContentCard(item));
+                    });
+                }
+            } catch (error) {
+                console.error('Error loading watchlist:', error);
+                watchlistGrid.innerHTML = `
+                    <div class="watchlist-empty">
+                        <h3>Failed to load watchlist</h3>
+                        <p>Please try again later</p>
+                    </div>
+                `;
+            }
+        });
+    }
+    
+    // Close watchlist modal
+    if (watchlistModalClose) {
+        watchlistModalClose.addEventListener('click', () => {
+            watchlistModal.classList.remove('show');
+        });
+    }
+    
+    // Close on background click
+    if (watchlistModal) {
+        watchlistModal.addEventListener('click', (e) => {
+            if (e.target === watchlistModal) {
+                watchlistModal.classList.remove('show');
+            }
+        });
+    }
+}
+
 // Initialize page
 document.addEventListener('DOMContentLoaded', () => {
     // Initialize auth
@@ -752,6 +837,9 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Setup mobile menu
     setupMobileMenu();
+    
+    // Setup watchlist modal
+    setupWatchlistModal();
     
     // Load content ONCE
     loadContentDetail();

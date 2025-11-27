@@ -5,7 +5,7 @@
 //   - Production: 'https://your-backend-domain.com'
 //   - Custom port: 'http://your-domain.com:8001'
 const CONFIG = {
-    API_BASE_URL: 'https://vscode-a3c10e48-e13b-47a8-8d57-a6acf7a4e757.preview.emergentagent.com/proxy/8001',  // 👈 CHANGE THIS to your backend URL
+    API_BASE_URL: 'https://cf41a3f1-e9f3-44db-b850-971e8883a055.preview.emergentagent.com',  // 👈 CHANGE THIS to your backend URL
     API_ENDPOINTS: {
         // Auth
         LOGIN: '/api/auth/login',

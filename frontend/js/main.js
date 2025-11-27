@@ -85,111 +85,159 @@ function loadSlider(sliderId, contents) {
     addSliderNavigation(sliderId);
 }
 
+// Set hero content (shared function)
+function setHeroContent(hero) {
+    if (!hero) return;
+    
+    const heroSection = document.getElementById('heroSection');
+    const heroTitle = document.getElementById('heroTitle');
+    const heroDescription = document.getElementById('heroDescription');
+    const heroPlayBtn = document.getElementById('heroPlayBtn');
+    const heroWatchlistBtn = document.getElementById('heroWatchlistBtn');
+    
+    // Set background
+    if (hero.image) {
+        heroSection.style.backgroundImage = `url(${hero.image})`;
+    }
+    
+    // Set content
+    heroTitle.textContent = hero.title;
+    heroDescription.textContent = hero.description || 'Watch now on Chadcinema';
+    
+    // Play button
+    heroPlayBtn.onclick = () => {
+        window.location.href = `detail.html?id=${hero.id}`;
+    };
+    
+    // Watchlist button
+    heroWatchlistBtn.onclick = async () => {
+        if (!Auth.isLoggedIn()) {
+            document.getElementById('authModal').classList.add('show');
+            return;
+        }
+        
+        try {
+            await API.user.addToWatchlist(hero.id);
+            showToast('Added to watchlist', 'success');
+        } catch (error) {
+            showToast(error.message, 'error');
+        }
+    };
+}
+
 // Load hero section
 async function loadHero() {
     try {
-        // Get trending IDs from backend
+        // Try to get trending IDs from backend first
         const trendingIds = await API.content.getTrending(1);
         if (trendingIds && trendingIds.length > 0) {
             // Match with local data
             const hero = DataManager.getById(trendingIds[0]);
-            
-            if (!hero) {
-                console.warn('Hero content not found in local data');
+            if (hero) {
+                setHeroContent(hero);
                 return;
             }
-            
-            const heroSection = document.getElementById('heroSection');
-            const heroTitle = document.getElementById('heroTitle');
-            const heroDescription = document.getElementById('heroDescription');
-            const heroPlayBtn = document.getElementById('heroPlayBtn');
-            const heroWatchlistBtn = document.getElementById('heroWatchlistBtn');
-            
-            // Set background
-            if (hero.image) {
-                heroSection.style.backgroundImage = `url(${hero.image})`;
-            }
-            
-            // Set content
-            heroTitle.textContent = hero.title;
-            heroDescription.textContent = hero.description || 'Watch now on Chadcinema';
-            
-            // Play button
-            heroPlayBtn.onclick = () => {
-                window.location.href = `detail.html?id=${hero.id}`;
-            };
-            
-            // Watchlist button
-            heroWatchlistBtn.onclick = async () => {
-                if (!Auth.isLoggedIn()) {
-                    document.getElementById('authModal').classList.add('show');
-                    return;
-                }
-                
-                try {
-                    await API.user.addToWatchlist(hero.id);
-                    showToast('Added to watchlist', 'success');
-                } catch (error) {
-                    showToast(error.message, 'error');
-                }
-            };
         }
     } catch (error) {
-        console.error('Error loading hero:', error);
+        console.warn('Backend not available for hero, using local data:', error.message);
+    }
+    
+    // Fallback: use random content from local data
+    const hero = DataManager.getRandomForHero();
+    if (hero) {
+        setHeroContent(hero);
+    } else {
+        // No content available at all
+        document.getElementById('heroTitle').textContent = 'Welcome to Chadcinema';
+        document.getElementById('heroDescription').textContent = 'Browse our collection of movies and series';
     }
 }
 
 // Load all content sections
 async function loadContent() {
+    // First, load all categories from local JSON data (always works)
+    loadLocalCategories();
+    
+    // Then try to load backend-dependent sections (trending, recommendations)
+    await loadBackendSections();
+}
+
+// Load categories from local JSON data - always works even without backend
+function loadLocalCategories() {
+    // Load anime - get from local data
+    const anime = DataManager.getByCategory('Anime', 20);
+    loadSlider('animeSlider', anime);
+    
+    // Load Korean - get from local data
+    const korean = DataManager.getByCategory('Korean', 20);
+    loadSlider('koreanSlider', korean);
+    
+    // Load movies - get from local data
+    const movies = DataManager.getByCategory('movie', 20);
+    loadSlider('moviesSlider', movies);
+    
+    // Load series - get from local data
+    const series = DataManager.getByCategory('series', 20);
+    loadSlider('seriesSlider', series);
+    
+    // Load Hollywood - get from local data
+    const hollywood = DataManager.getByCategory('Hollywood', 20);
+    loadSlider('hollywoodSlider', hollywood);
+    
+    // Load Bollywood - get from local data
+    const bollywood = DataManager.getByCategory('Bollywood', 20);
+    loadSlider('bollywoodSlider', bollywood);
+    
+    // Load South Indian - get from local data
+    const south = DataManager.getByCategory('South Indian', 20);
+    loadSlider('southSlider', south);
+    
+    // Load Animation - get from local data
+    const animation = DataManager.getByCategory('Animation', 20);
+    loadSlider('animationSlider', animation);
+}
+
+// Load backend-dependent sections (trending, recommendations)
+async function loadBackendSections() {
+    const trendingSection = document.querySelector('#trendingSlider').closest('.content-row');
+    const recommendationsSection = document.getElementById('recommendationsSection');
+    
+    // Try to load trending from backend
     try {
-        // Load trending - get IDs from backend, match with local data
         const trendingIds = await API.content.getTrending(20);
-        const trending = DataManager.getByIds(trendingIds);
-        loadSlider('trendingSlider', trending);
-        
-        // Load anime - get from local data
-        const anime = DataManager.getByCategory('Anime', 20);
-        loadSlider('animeSlider', anime);
-        
-        // Load Korean - get from local data
-        const korean = DataManager.getByCategory('Korean', 20);
-        loadSlider('koreanSlider', korean);
-        
-        // Load movies - get from local data
-        const movies = DataManager.getByCategory('movie', 20);
-        loadSlider('moviesSlider', movies);
-        
-        // Load series - get from local data
-        const series = DataManager.getByCategory('series', 20);
-        loadSlider('seriesSlider', series);
-        
-        // Load Hollywood - get from local data
-        const hollywood = DataManager.getByCategory('Hollywood', 20);
-        loadSlider('hollywoodSlider', hollywood);
-        
-        // Load Bollywood - get from local data
-        const bollywood = DataManager.getByCategory('Bollywood', 20);
-        loadSlider('bollywoodSlider', bollywood);
-        
-        // Load South Indian - get from local data
-        const south = DataManager.getByCategory('South Indian', 20);
-        loadSlider('southSlider', south);
-        
-        // Load Animation - get from local data
-        const animation = DataManager.getByCategory('Animation', 20);
-        loadSlider('animationSlider', animation);
-        
-        // Load recommendations if logged in - get IDs from backend
-        if (Auth.isLoggedIn()) {
+        if (trendingIds && trendingIds.length > 0) {
+            const trending = DataManager.getByIds(trendingIds);
+            if (trending.length > 0) {
+                loadSlider('trendingSlider', trending);
+                trendingSection.style.display = 'block';
+            } else {
+                // Hide trending section if no data
+                trendingSection.style.display = 'none';
+            }
+        } else {
+            trendingSection.style.display = 'none';
+        }
+    } catch (error) {
+        console.warn('Backend not available for trending:', error.message);
+        // Hide trending section when backend is not available
+        trendingSection.style.display = 'none';
+    }
+    
+    // Try to load recommendations if logged in
+    if (Auth.isLoggedIn()) {
+        try {
             const recommendationIds = await API.user.getRecommendations();
             if (recommendationIds && recommendationIds.length > 0) {
                 const recommendations = DataManager.getByIds(recommendationIds);
-                document.getElementById('recommendationsSection').style.display = 'block';
-                loadSlider('recommendationsSlider', recommendations);
+                if (recommendations.length > 0) {
+                    recommendationsSection.style.display = 'block';
+                    loadSlider('recommendationsSlider', recommendations);
+                }
             }
+        } catch (error) {
+            console.warn('Backend not available for recommendations:', error.message);
+            // Keep recommendations section hidden
         }
-    } catch (error) {
-        console.error('Error loading content:', error);
     }
 }
 
