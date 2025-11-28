@@ -144,6 +144,102 @@ const DataManager = {
         return results;
     },
     
+    // Advanced filter: by type, industry, and genre (case-insensitive)
+    getByFilter(filters = {}, limit = 50) {
+        const results = [];
+        const { type, industry, genre, industries, genres } = filters;
+        
+        for (const item of this.contentMap.values()) {
+            let match = true;
+            
+            // Check type (case-insensitive)
+            if (type) {
+                const itemType = (item.type || '').toLowerCase();
+                if (itemType !== type.toLowerCase()) {
+                    match = false;
+                }
+            }
+            
+            // Check industry (case-insensitive)
+            if (industry) {
+                const itemIndustry = (item.industry || '').toLowerCase();
+                if (itemIndustry !== industry.toLowerCase()) {
+                    match = false;
+                }
+            }
+            
+            // Check multiple industries (OR logic, case-insensitive)
+            if (industries && industries.length > 0) {
+                const itemIndustry = (item.industry || '').toLowerCase();
+                const matchesAnyIndustry = industries.some(ind => 
+                    itemIndustry === ind.toLowerCase()
+                );
+                if (!matchesAnyIndustry) {
+                    match = false;
+                }
+            }
+            
+            // Check genre (item.genres is an array, case-insensitive)
+            if (genre) {
+                const itemGenres = Array.isArray(item.genres) ? item.genres : [];
+                const hasGenre = itemGenres.some(g => 
+                    (g || '').toLowerCase() === genre.toLowerCase()
+                );
+                if (!hasGenre) {
+                    match = false;
+                }
+            }
+            
+            // Check multiple genres (OR logic, case-insensitive)
+            if (genres && genres.length > 0) {
+                const itemGenres = Array.isArray(item.genres) ? item.genres : [];
+                const hasAnyGenre = genres.some(searchGenre => 
+                    itemGenres.some(g => (g || '').toLowerCase() === searchGenre.toLowerCase())
+                );
+                if (!hasAnyGenre) {
+                    match = false;
+                }
+            }
+            
+            if (match) {
+                results.push(item);
+                if (results.length >= limit) break;
+            }
+        }
+        
+        return results;
+    },
+    
+    // Special filter for Cartoon (series with type cartoon OR movies with cartoon/animation genre)
+    getCartoonContent(limit = 50) {
+        const results = [];
+        
+        for (const item of this.contentMap.values()) {
+            const itemType = (item.type || '').toLowerCase();
+            const itemIndustry = (item.industry || '').toLowerCase();
+            const itemGenres = Array.isArray(item.genres) ? item.genres : [];
+            const hasCartoonGenre = itemGenres.some(g => {
+                const genreLower = (g || '').toLowerCase();
+                return genreLower.includes('cartoon') || 
+                       genreLower.includes('animation') ||
+                       genreLower === 'animated';
+            });
+            
+            // Include if:
+            // 1. Type is cartoon (series)
+            // 2. Has cartoon/animation in genre (movies)
+            // 3. Industry is Animation or Cartoon
+            if (itemType === 'cartoon' || 
+                itemIndustry === 'cartoon' ||
+                (itemType === 'movie' && hasCartoonGenre)) {
+                results.push(item);
+                if (results.length >= limit) break;
+            }
+        }
+        
+        return results;
+    },
+    
     // Calculate similarity score between two strings (0-1)
     calculateSimilarity(str1, str2) {
         if (!str1 || !str2 || typeof str1 !== 'string' || typeof str2 !== 'string') return 0;

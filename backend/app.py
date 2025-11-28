@@ -1059,7 +1059,7 @@ def admin_weekly_editor():
             if (currentUrl.includes('preview.emergentagent.com')) {
                 // Extract the backend URL from the preview pattern
                 // or use a hardcoded preview backend URL
-                return 'https://dynamic-hero-slides.preview.emergentagent.com';
+                return 'https://series-dashboard-3.preview.emergentagent.com';
             }
             // Local development - use relative URLs
             return '';

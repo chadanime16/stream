@@ -5,7 +5,7 @@
 //   - Production: 'https://your-backend-domain.com'
 //   - Custom port: 'http://your-domain.com:8001'
 const CONFIG = {
-    API_BASE_URL: 'https://dynamic-hero-slides.preview.emergentagent.com',  // 👈 CHANGE THIS to your backend URL
+    API_BASE_URL: 'http://127.0.0.1:8001',  // 👈 CHANGE THIS to your backend URL
     API_ENDPOINTS: {
         // Auth
         LOGIN: '/api/auth/login',

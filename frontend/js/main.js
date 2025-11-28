@@ -35,7 +35,8 @@ const DAY_FULL_NAMES = {
     'thursday': 'Thursday',
     'friday': 'Friday',
     'saturday': 'Saturday',
-    'sunday': 'Sunday'
+    'sunday': 'Sunday',
+    'series': 'Weekly Series'
 };
 
 // =============================================================================
@@ -58,6 +59,16 @@ let dailyPicksState = {
     weeklyData: null
 };
 
+// Create a local placeholder image (SVG data URI)
+const PLACEHOLDER_IMAGE = 'data:image/svg+xml;base64,' + btoa(`
+<svg width="350" height="200" xmlns="http://www.w3.org/2000/svg">
+  <rect width="350" height="200" fill="#1a1212"/>
+  <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="#8b7070" font-family="Arial, sans-serif" font-size="16">No Image Available</text>
+  <circle cx="175" cy="80" r="30" fill="#2a1f1f"/>
+  <rect x="155" y="95" width="40" height="5" rx="2" fill="#2a1f1f"/>
+</svg>
+`);
+
 // Create content card HTML (horizontal/landscape image)
 function createContentCard(content) {
     const card = document.createElement('div');
@@ -71,10 +82,10 @@ function createContentCard(content) {
     
     card.innerHTML = `
         ${content.rating ? `<div class="content-card-rating">⭐ ${content.rating}</div>` : ''}
-        <img src="${content.image || 'https://via.placeholder.com/350x200?text=No+Image'}" 
+        <img src="${content.image || PLACEHOLDER_IMAGE}" 
              alt="${content.title}" 
              class="content-card-image" 
-             onerror="this.src='https://via.placeholder.com/350x200?text=No+Image'">
+             onerror="this.src='${PLACEHOLDER_IMAGE}'">
         <div class="content-card-info">
             <h4 class="content-card-title">${content.title}</h4>
             <div class="content-card-meta">
@@ -510,7 +521,9 @@ async function loadDayContent(day) {
     
     // Update title
     const today = DAY_NAMES[new Date().getDay()];
-    if (day === today) {
+    if (day === 'series') {
+        title.textContent = `📺 This Week's Series`;
+    } else if (day === today) {
         title.textContent = `📅 Today's Picks (${DAY_FULL_NAMES[day]})`;
     } else {
         title.textContent = `📅 ${DAY_FULL_NAMES[day]}'s Picks`;
@@ -541,7 +554,11 @@ async function loadDayContent(day) {
     
     // If no items for this day, show a message or hide
     if (items.length === 0) {
-        slider.innerHTML = '<div class="slider-loading" style="color: var(--text-muted);">No picks for this day yet. Check back later!</div>';
+        if (day === 'series') {
+            slider.innerHTML = '<div class="slider-loading" style="color: var(--text-muted);">No series for this week yet. Check back later!</div>';
+        } else {
+            slider.innerHTML = '<div class="slider-loading" style="color: var(--text-muted);">No picks for this day yet. Check back later!</div>';
+        }
         return;
     }
     
@@ -597,70 +614,98 @@ async function loadDailyPicks() {
     console.log('✅ Daily picks section loaded');
 }
 
-// Load weekly series
+// Load weekly series (now integrated into daily picks, so hide separate section)
 async function loadWeeklySeries() {
     const section = document.getElementById('weeklySeriesSection');
-    const slider = document.getElementById('weeklySeriesSlider');
     
-    if (!section || !slider) return;
-    
-    try {
-        const response = await fetch(`${CONFIG.API_BASE_URL}/api/content/weekly/series`);
-        if (response.ok) {
-            const seriesIds = await response.json();
-            if (seriesIds && seriesIds.length > 0) {
-                const series = DataManager.getByIds(seriesIds);
-                if (series.length > 0) {
-                    loadSlider('weeklySeriesSlider', series);
-                    section.style.display = 'block';
-                    console.log('✅ Weekly series section loaded');
-                    return;
-                }
-            }
-        }
-    } catch (error) {
-        console.warn('Could not load weekly series:', error.message);
+    // Hide the separate weekly series section since it's now integrated into daily picks
+    if (section) {
+        section.style.display = 'none';
     }
     
-    // Hide section if no data
-    section.style.display = 'none';
+    console.log('✅ Weekly series now integrated into daily picks tabs');
 }
 
 // =============================================================================
 
 // Load categories from local JSON data - always works even without backend
 function loadLocalCategories() {
-    // Load anime - get from local data
+    // 1. Bollywood Movies
+    const bollywoodMovies = DataManager.getByFilter({ industry: 'Bollywood', type: 'movie' }, 20);
+    loadSlider('bollywoodMoviesSlider', bollywoodMovies);
+    
+    // 2. Hollywood Movies
+    const hollywoodMovies = DataManager.getByFilter({ industry: 'Hollywood', type: 'movie' }, 20);
+    loadSlider('hollywoodMoviesSlider', hollywoodMovies);
+    
+    // 3. South Indian Movies
+    const southMovies = DataManager.getByFilter({ industry: 'South Indian', type: 'movie' }, 20);
+    loadSlider('southMoviesSlider', southMovies);
+    
+    // 4. Gujarati Movies
+    const gujaratiMovies = DataManager.getByFilter({ industry: 'Gujarati', type: 'movie' }, 20);
+    loadSlider('gujaratiMoviesSlider', gujaratiMovies);
+    
+    // 5. Korean Dramas
+    const koreanDramas = DataManager.getByFilter({ industry: 'Korean', type: 'series' }, 20);
+    loadSlider('koreanDramasSlider', koreanDramas);
+    
+    // 6. Cartoon (special filter)
+    const cartoon = DataManager.getCartoonContent({ type: 'cartoon', genre:'Cartoon' }, 20);
+    loadSlider('cartoonSlider', cartoon);
+    
+    // 7. Anime
     const anime = DataManager.getByCategory('Anime', 20);
     loadSlider('animeSlider', anime);
     
-    // Load Korean - get from local data
-    const korean = DataManager.getByCategory('Korean', 20);
-    loadSlider('koreanSlider', korean);
+    // 8. Animation Movies
+    const animationMovies = DataManager.getByFilter({ industry: 'Animation', type: 'movie' }, 20);
+    loadSlider('animationMoviesSlider', animationMovies);
     
-    // Load movies - get from local data
-    const movies = DataManager.getByCategory('movie', 20);
-    loadSlider('moviesSlider', movies);
+    // 9. Hollywood Series
+    const hollywoodSeries = DataManager.getByFilter({ industry: 'Hollywood', type: 'series' }, 20);
+    loadSlider('hollywoodSeriesSlider', hollywoodSeries);
     
-    // Load series - get from local data
-    const series = DataManager.getByCategory('series', 20);
-    loadSlider('seriesSlider', series);
+    // 10. Bollywood Series
+    const bollywoodSeries = DataManager.getByFilter({ industry: 'Bollywood', type: 'series' }, 20);
+    loadSlider('bollywoodSeriesSlider', bollywoodSeries);
     
-    // Load Hollywood - get from local data
-    const hollywood = DataManager.getByCategory('Hollywood', 20);
-    loadSlider('hollywoodSlider', hollywood);
+    // 11. Hollywood Action
+    const hollywoodAction = DataManager.getByFilter({ industry: 'Hollywood', genre: 'Action' }, 20);
+    loadSlider('hollywoodActionSlider', hollywoodAction);
     
-    // Load Bollywood - get from local data
-    const bollywood = DataManager.getByCategory('Bollywood', 20);
-    loadSlider('bollywoodSlider', bollywood);
+    // 12. Bollywood Action
+    const bollywoodAction = DataManager.getByFilter({ industry: 'Bollywood', genre: 'Action' }, 20);
+    loadSlider('bollywoodActionSlider', bollywoodAction);
     
-    // Load South Indian - get from local data
-    const south = DataManager.getByCategory('South Indian', 20);
-    loadSlider('southSlider', south);
+    // 13. Hollywood Horror
+    const hollywoodHorror = DataManager.getByFilter({ industry: 'Hollywood', genre: 'Horror' }, 20);
+    loadSlider('hollywoodHorrorSlider', hollywoodHorror);
     
-    // Load Animation - get from local data
-    const animation = DataManager.getByCategory('Animation', 20);
-    loadSlider('animationSlider', animation);
+    // 14. Indian Horror (Bollywood + South Indian with Horror genre)
+    const indianHorror = DataManager.getByFilter({ industries: ['Bollywood', 'South Indian'], genre: 'Horror' }, 20);
+    loadSlider('indianHorrorSlider', indianHorror);
+    
+    // 15. Hollywood Romance
+    const hollywoodRomance = DataManager.getByFilter({ industry: 'Hollywood', genre: 'Romance' }, 20);
+    loadSlider('hollywoodRomanceSlider', hollywoodRomance);
+    
+    // 16. Bollywood Romance
+    const bollywoodRomance = DataManager.getByFilter({ industry: 'Bollywood', genre: 'Romance' }, 20);
+    loadSlider('bollywoodRomanceSlider', bollywoodRomance);
+    
+    // Additional sections
+    // Comedy Movies
+    const comedy = DataManager.getByFilter({ genre: 'Comedy' }, 20);
+    loadSlider('comedySlider', comedy);
+    
+    // Thriller & Mystery
+    const thriller = DataManager.getByFilter({ genres: ['Thriller', 'Mystery'] }, 20);
+    loadSlider('thrillerSlider', thriller);
+    
+    // Drama
+    const drama = DataManager.getByFilter({ genre: 'Drama' }, 20);
+    loadSlider('dramaSlider', drama);
 }
 
 // Load backend-dependent sections (trending, recommendations)
