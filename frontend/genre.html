@@ -44,7 +44,7 @@
                 <a href="genre.html?type=anime" class="nav-link">Anime</a>
                 <a href="genre.html?genre=drama" class="nav-link">Drama</a>
                 <a href="genre.html?type=cartoon&genre=cartoon" class="nav-link">Cartoon</a>
-                <a href="#" class="nav-link" data-category="about">About</a>
+                <a href="about.html" class="nav-link">About</a>
             </div>
              <div class="user-menu">
                 <button class="user-btn" id="userBtn">
@@ -68,24 +68,50 @@
         </div>
     </nav>
 
-    <!-- Page Header -->
+    <!-- Page Header with Stats -->
     <section class="genre-header">
         <div class="genre-header-content">
-            <h1 id="genreTitle">Loading...</h1>
-            <p id="genreSubtitle">Discover amazing content</p>
+            <div class="genre-header-info">
+                <h1 id="genreTitle">Loading...</h1>
+                <p id="genreSubtitle">Discover amazing content</p>
+            </div>
+            <div class="genre-header-stats" id="genreStats">
+                <div class="stat-item">
+                    <span class="stat-number" id="totalCount">0</span>
+                    <span class="stat-label">Total</span>
+                </div>
+            </div>
         </div>
     </section>
 
     <!-- Content Grid -->
     <main class="main-content">
-        <div class="genre-filters">
+        <!-- Filter & Sort Bar -->
+        <div class="genre-toolbar">
             <div class="filter-info">
                 <span id="resultCount">Loading...</span>
+            </div>
+            <div class="sort-controls">
+                <label for="sortSelect">Sort by:</label>
+                <select id="sortSelect" class="sort-select">
+                    <option value="default">Default</option>
+                    <option value="rating-desc">Rating (High to Low)</option>
+                    <option value="rating-asc">Rating (Low to High)</option>
+                    <option value="year-desc">Year (Newest First)</option>
+                    <option value="year-asc">Year (Oldest First)</option>
+                    <option value="title-asc">Title (A-Z)</option>
+                    <option value="title-desc">Title (Z-A)</option>
+                </select>
             </div>
         </div>
 
         <div class="genre-grid" id="genreGrid">
             <div class="loading-message">Loading content...</div>
+        </div>
+        
+        <!-- Load More Button -->
+        <div class="load-more-container" id="loadMoreContainer" style="display: none;">
+            <button class="btn btn-secondary load-more-btn" id="loadMoreBtn">Load More</button>
         </div>
     </main>
 

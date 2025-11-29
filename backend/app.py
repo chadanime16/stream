@@ -1061,7 +1061,7 @@ def admin_weekly_editor():
             if (currentUrl.includes('preview.emergentagent.com')) {
                 // Extract the backend URL from the preview pattern
                 // or use a hardcoded preview backend URL
-                return 'https://movie-genre-finder-2.preview.emergentagent.com';
+                return 'https://search-refine.preview.emergentagent.com';
             }
             // Local development - use relative URLs
             return '';

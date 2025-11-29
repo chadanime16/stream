@@ -1,6 +1,19 @@
 // Genre/Filter Page JavaScript
 
 let searchTimeout = null;
+let currentContent = [];
+let displayedCount = 0;
+const ITEMS_PER_PAGE = 24;
+
+// Local placeholder SVG for failed images
+const PLACEHOLDER_IMAGE = 'data:image/svg+xml;base64,' + btoa(`
+<svg width="350" height="200" xmlns="http://www.w3.org/2000/svg">
+  <rect width="350" height="200" fill="#1a1212"/>
+  <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="#8b7070" font-family="Arial, sans-serif" font-size="16">No Image</text>
+  <circle cx="175" cy="70" r="25" fill="#2a1f1f"/>
+  <rect x="160" y="100" width="30" height="4" rx="2" fill="#2a1f1f"/>
+</svg>
+`);
 
 // Get URL parameters
 function getUrlParams() {
@@ -12,10 +25,10 @@ function getUrlParams() {
     };
 }
 
-// Create content card HTML
+// Create content card HTML with improved image handling
 function createContentCard(content) {
     const card = document.createElement('div');
-    card.className = 'content-card';
+    card.className = 'content-card genre-card';
     card.onclick = () => {
         window.location.href = `detail.html?id=${content.id}`;
     };
@@ -23,17 +36,34 @@ function createContentCard(content) {
     const genres = Array.isArray(content.genres) ? content.genres.slice(0, 2) : [];
     const genreTags = genres.map(g => `<span class="genre-tag">${g}</span>`).join('');
     
+    // Get rating as number for badge styling
+    const rating = parseFloat(content.rating) || 0;
+    const ratingClass = rating >= 8 ? 'high' : rating >= 6 ? 'medium' : 'low';
+    
     card.innerHTML = `
-        ${content.rating ? `<div class="content-card-rating">⭐ ${content.rating}</div>` : ''}
-        <img src="${content.image || 'https://via.placeholder.com/350x200?text=No+Image'}" 
-             alt="${content.title}" 
-             class="content-card-image" 
-             onerror="this.src='https://via.placeholder.com/350x200?text=No+Image'">
+        ${content.rating ? `<div class="content-card-rating ${ratingClass}">⭐ ${content.rating}</div>` : ''}
+        <div class="card-image-wrapper">
+            <img src="${content.image || PLACEHOLDER_IMAGE}" 
+                 alt="${content.title}" 
+                 class="content-card-image" 
+                 loading="lazy"
+                 onload="this.parentElement.classList.add('loaded')"
+                 onerror="this.onerror=null; this.src='${PLACEHOLDER_IMAGE}'; this.parentElement.classList.add('loaded');">
+            <div class="card-image-skeleton"></div>
+        </div>
+        <div class="content-card-overlay">
+            <div class="card-play-icon">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="currentColor">
+                    <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                </svg>
+            </div>
+        </div>
         <div class="content-card-info">
             <h4 class="content-card-title">${content.title}</h4>
             <div class="content-card-meta">
-                ${content.year ? `<span>${content.year}</span>` : ''}
-                ${content.duration ? `<span>${content.duration}</span>` : ''}
+                ${content.year ? `<span class="meta-year">${content.year}</span>` : ''}
+                ${content.duration ? `<span class="meta-duration">${content.duration}</span>` : ''}
+                ${content.industry ? `<span class="meta-industry">${content.industry}</span>` : ''}
             </div>
             ${genreTags ? `<div class="content-card-genres">${genreTags}</div>` : ''}
         </div>
@@ -43,24 +73,17 @@ function createContentCard(content) {
 }
 
 // Filter content based on URL parameters
-// Supports OR conditions when multiple values are provided (comma-separated)
-// Also supports special 'cartoon' and 'anime' handling
 function filterContent(params) {
     const allContent = DataManager.getAll();
     
-    // Parse comma-separated values into arrays
     const types = params.type ? params.type.split(',').map(t => t.trim().toLowerCase()).filter(t => t) : [];
     const industries = params.industry ? params.industry.split(',').map(i => i.trim().toLowerCase()).filter(i => i) : [];
     const genres = params.genre ? params.genre.split(',').map(g => g.trim().toLowerCase()).filter(g => g) : [];
     
-    // Special handling for cartoon: type=cartoon should also match genre=Cartoon
     const isCartoonFilter = types.includes('cartoon') || genres.includes('cartoon');
-    // Special handling for anime
     const isAnimeFilter = types.includes('anime') || industries.includes('anime');
-    // Special handling for animation industry filter
     const isAnimationFilter = industries.includes('animation');
     
-    // If no filters, return all
     if (types.length === 0 && industries.length === 0 && genres.length === 0) {
         return allContent;
     }
@@ -70,25 +93,16 @@ function filterContent(params) {
         const itemIndustry = (item.industry || '').toLowerCase();
         const itemGenres = Array.isArray(item.genres) ? item.genres.map(g => (g || '').toLowerCase()) : [];
         
-        // Check if item is anime or cartoon
         const isAnimeContent = itemType === 'anime' || itemIndustry === 'anime';
         const isCartoonContent = itemType === 'cartoon' || itemGenres.includes('cartoon');
         const isAnimationContent = itemIndustry === 'animation';
         
-        // Special animation industry handling - show Animation industry content
         if (isAnimationFilter) {
-            // Only show animation industry content
-            if (!isAnimationContent) {
-                return false;
-            }
-            // Check type filter if present
+            if (!isAnimationContent) return false;
             if (types.length > 0) {
-                const matchesType = types.some(t => 
-                    itemType === t || itemType.includes(t)
-                );
+                const matchesType = types.some(t => itemType === t || itemType.includes(t));
                 if (!matchesType) return false;
             }
-            // Check genre filter if present
             if (genres.length > 0) {
                 const matchesGenre = genres.some(searchGenre => 
                     itemGenres.some(g => g === searchGenre || g.includes(searchGenre))
@@ -98,13 +112,8 @@ function filterContent(params) {
             return true;
         }
         
-        // Special anime handling
         if (isAnimeFilter) {
-            // Only show anime content
-            if (!isAnimeContent) {
-                return false;
-            }
-            // Check other filters if present
+            if (!isAnimeContent) return false;
             if (industries.length > 0) {
                 const nonAnimeIndustries = industries.filter(i => i !== 'anime');
                 if (nonAnimeIndustries.length > 0) {
@@ -123,93 +132,86 @@ function filterContent(params) {
             return true;
         }
         
-        // Special cartoon handling: OR condition for type=cartoon OR genre=cartoon
         if (isCartoonFilter) {
             const matchesCartoonType = itemType === 'cartoon';
             const matchesCartoonGenre = itemGenres.some(g => g === 'cartoon' || g.includes('cartoon'));
             
-            // Item must match either cartoon type OR cartoon genre
-            if (!matchesCartoonType && !matchesCartoonGenre) {
-                return false; // Doesn't match cartoon filter, exclude it
-            }
+            if (!matchesCartoonType && !matchesCartoonGenre) return false;
             
-            // Also check other filters if present (AND with non-cartoon filters)
             let otherFiltersPass = true;
-            
-            // Check non-cartoon types
             const nonCartoonTypes = types.filter(t => t !== 'cartoon');
             if (nonCartoonTypes.length > 0) {
                 otherFiltersPass = otherFiltersPass && nonCartoonTypes.some(t => 
                     itemType === t || itemType.includes(t)
                 );
             }
-            
-            // Check industries
             if (industries.length > 0) {
                 otherFiltersPass = otherFiltersPass && industries.some(ind => 
                     itemIndustry === ind || itemIndustry.includes(ind)
                 );
             }
-            
-            // Check non-cartoon genres
             const nonCartoonGenres = genres.filter(g => g !== 'cartoon');
             if (nonCartoonGenres.length > 0) {
                 otherFiltersPass = otherFiltersPass && nonCartoonGenres.some(searchGenre => 
                     itemGenres.some(g => g === searchGenre || g.includes(searchGenre))
                 );
             }
-            
             return otherFiltersPass;
         }
         
-        // For regular filters (not anime/cartoon/animation), EXCLUDE anime, cartoon, and animation content
-        if (isAnimeContent || isCartoonContent || isAnimationContent) {
-            return false;
-        }
+        if (isAnimeContent || isCartoonContent || isAnimationContent) return false;
         
-        // Standard filtering with OR logic within each category (AND between categories)
         let matchesType = true;
         let matchesIndustry = true;
         let matchesGenre = true;
         
-        // Type filter: OR within types (match any of the specified types)
         if (types.length > 0) {
-            matchesType = types.some(t => 
-                itemType === t || itemType.includes(t)
-            );
+            matchesType = types.some(t => itemType === t || itemType.includes(t));
         }
-        
-        // Industry filter: OR within industries (match any of the specified industries)
         if (industries.length > 0) {
-            matchesIndustry = industries.some(ind => 
-                itemIndustry === ind || itemIndustry.includes(ind)
-            );
+            matchesIndustry = industries.some(ind => itemIndustry === ind || itemIndustry.includes(ind));
         }
-        
-        // Genre filter: OR within genres (match any of the specified genres)
         if (genres.length > 0) {
             matchesGenre = genres.some(searchGenre => 
                 itemGenres.some(g => g === searchGenre || g.includes(searchGenre))
             );
         }
         
-        // AND between different filter categories (type AND industry AND genre)
         return matchesType && matchesIndustry && matchesGenre;
     });
 }
 
+// Sort content
+function sortContent(content, sortBy) {
+    const sorted = [...content];
+    
+    switch (sortBy) {
+        case 'rating-desc':
+            return sorted.sort((a, b) => (parseFloat(b.rating) || 0) - (parseFloat(a.rating) || 0));
+        case 'rating-asc':
+            return sorted.sort((a, b) => (parseFloat(a.rating) || 0) - (parseFloat(b.rating) || 0));
+        case 'year-desc':
+            return sorted.sort((a, b) => (parseInt(b.year) || 0) - (parseInt(a.year) || 0));
+        case 'year-asc':
+            return sorted.sort((a, b) => (parseInt(a.year) || 0) - (parseInt(b.year) || 0));
+        case 'title-asc':
+            return sorted.sort((a, b) => (a.title || '').localeCompare(b.title || ''));
+        case 'title-desc':
+            return sorted.sort((a, b) => (b.title || '').localeCompare(a.title || ''));
+        default:
+            return sorted;
+    }
+}
+
 // Get page title based on filters
 function getPageTitle(params) {
-    // Special case for cartoon - when both type=cartoon and genre=cartoon
     if (params.type && params.genre) {
         const types = params.type.split(',').map(t => t.trim().toLowerCase());
         const genres = params.genre.split(',').map(g => g.trim().toLowerCase());
         
-        // If it's the cartoon filter (type=cartoon&genre=cartoon)
         if (types.includes('cartoon') && genres.includes('cartoon')) {
             return 'Cartoons';
         }
-        
         return `${capitalizeFirst(params.genre)} ${capitalizeFirst(params.type)}`;
     }
     
@@ -218,54 +220,73 @@ function getPageTitle(params) {
     } else if (params.industry && params.genre) {
         return `${capitalizeFirst(params.genre)} - ${capitalizeFirst(params.industry)}`;
     } else if (params.type) {
-        // Handle comma-separated types
         const types = params.type.split(',').map(t => capitalizeFirst(t.trim())).filter(t => t);
-        if (types.length > 1) {
-            return types.join(' & ');
-        }
+        if (types.length > 1) return types.join(' & ');
         return `All ${capitalizeFirst(params.type)}`;
     } else if (params.industry) {
-        // Handle comma-separated industries
         const industries = params.industry.split(',').map(i => capitalizeFirst(i.trim())).filter(i => i);
-        if (industries.length > 1) {
-            return industries.join(' & ');
-        }
+        if (industries.length > 1) return industries.join(' & ');
         return `${capitalizeFirst(params.industry)} Content`;
     } else if (params.genre) {
-        // Handle comma-separated genres
         const genres = params.genre.split(',').map(g => capitalizeFirst(g.trim())).filter(g => g);
-        if (genres.length > 1) {
-            return genres.join(' & ');
-        }
+        if (genres.length > 1) return genres.join(' & ');
         return `${capitalizeFirst(params.genre)} Content`;
     }
     return 'Browse Content';
 }
 
-// Capitalize first letter
 function capitalizeFirst(str) {
     if (!str) return '';
     return str.charAt(0).toUpperCase() + str.slice(1);
 }
 
-// Display filtered content
-function displayContent(content) {
+// Display content with pagination
+function displayContent(content, append = false) {
     const grid = document.getElementById('genreGrid');
     const resultCount = document.getElementById('resultCount');
+    const loadMoreContainer = document.getElementById('loadMoreContainer');
+    const totalCount = document.getElementById('totalCount');
     
-    grid.innerHTML = '';
+    if (!append) {
+        grid.innerHTML = '';
+        displayedCount = 0;
+    }
     
     if (content.length === 0) {
-        grid.innerHTML = '<div class="no-results">No content found matching your filters</div>';
+        grid.innerHTML = `
+            <div class="no-results">
+                <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <path d="m21 21-4.35-4.35"></path>
+                    <path d="M8 11h6"></path>
+                </svg>
+                <h3>No content found</h3>
+                <p>Try adjusting your filters or browse other categories</p>
+            </div>
+        `;
         resultCount.textContent = 'No results';
+        totalCount.textContent = '0';
+        loadMoreContainer.style.display = 'none';
         return;
     }
     
-    resultCount.textContent = `${content.length} ${content.length === 1 ? 'result' : 'results'}`;
+    // Calculate items to show
+    const startIndex = displayedCount;
+    const endIndex = Math.min(startIndex + ITEMS_PER_PAGE, content.length);
+    const itemsToShow = content.slice(startIndex, endIndex);
     
-    content.forEach(item => {
+    itemsToShow.forEach(item => {
         grid.appendChild(createContentCard(item));
     });
+    
+    displayedCount = endIndex;
+    
+    // Update counts
+    resultCount.textContent = `Showing ${displayedCount} of ${content.length} ${content.length === 1 ? 'result' : 'results'}`;
+    totalCount.textContent = content.length.toString();
+    
+    // Show/hide load more button
+    loadMoreContainer.style.display = displayedCount < content.length ? 'flex' : 'none';
 }
 
 // Update page header
@@ -277,20 +298,35 @@ function updatePageHeader(params) {
 
 // Load and display filtered content
 async function loadGenreContent() {
-    // Wait for data to load
     await DataManager.loadAllData();
     
-    // Get URL parameters
     const params = getUrlParams();
-    
-    // Update page header
     updatePageHeader(params);
     
-    // Filter content
-    const filtered = filterContent(params);
+    currentContent = filterContent(params);
     
-    // Display content
-    displayContent(filtered);
+    // Apply default sort
+    const sortSelect = document.getElementById('sortSelect');
+    currentContent = sortContent(currentContent, sortSelect.value);
+    
+    displayContent(currentContent);
+}
+
+// Setup sort functionality
+function setupSorting() {
+    const sortSelect = document.getElementById('sortSelect');
+    sortSelect.addEventListener('change', () => {
+        currentContent = sortContent(currentContent, sortSelect.value);
+        displayContent(currentContent);
+    });
+}
+
+// Setup load more
+function setupLoadMore() {
+    const loadMoreBtn = document.getElementById('loadMoreBtn');
+    loadMoreBtn.addEventListener('click', () => {
+        displayContent(currentContent, true);
+    });
 }
 
 // Create search modal
@@ -299,14 +335,12 @@ function createSearchModal() {
     const searchModalInput = document.getElementById('searchModalInput');
     const searchModalClose = document.getElementById('searchModalClose');
     
-    // Close modal
     searchModalClose.onclick = () => {
         modal.classList.remove('show');
         searchModalInput.value = '';
         document.getElementById('searchResults').innerHTML = '';
     };
     
-    // Close on background click
     modal.onclick = (e) => {
         if (e.target === modal) {
             modal.classList.remove('show');
@@ -315,11 +349,8 @@ function createSearchModal() {
         }
     };
     
-    // Real-time search in modal
     searchModalInput.addEventListener('input', (e) => {
-        if (searchTimeout) {
-            clearTimeout(searchTimeout);
-        }
+        if (searchTimeout) clearTimeout(searchTimeout);
         
         searchTimeout = setTimeout(() => {
             const query = searchModalInput.value.trim();
@@ -338,7 +369,6 @@ function createSearchModal() {
     });
 }
 
-// Display search results
 function displaySearchResults(results, query) {
     const resultsContainer = document.getElementById('searchResults');
     resultsContainer.innerHTML = '';
@@ -352,7 +382,6 @@ function displaySearchResults(results, query) {
     }
 }
 
-// Setup search functionality
 function setupSearch() {
     const searchInput = document.getElementById('searchInput');
     const searchBtn = document.getElementById('searchBtn');
@@ -375,35 +404,22 @@ function setupSearch() {
         }
     }
     
-    // Real-time search as user types
     searchInput.addEventListener('input', (e) => {
-        if (searchTimeout) {
-            clearTimeout(searchTimeout);
-        }
-        
-        searchTimeout = setTimeout(() => {
-            performSearch();
-        }, 300);
+        if (searchTimeout) clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => { performSearch(); }, 300);
     });
     
-    // Search on button click
     searchBtn.addEventListener('click', performSearch);
-    
-    // Search on Enter key
     searchInput.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') {
-            if (searchTimeout) {
-                clearTimeout(searchTimeout);
-            }
+            if (searchTimeout) clearTimeout(searchTimeout);
             performSearch();
         }
     });
 }
 
-// Navbar scroll effect
 function setupNavbar() {
     const navbar = document.querySelector('.navbar');
-    
     window.addEventListener('scroll', () => {
         if (window.scrollY > 100) {
             navbar.classList.add('scrolled');
@@ -413,7 +429,6 @@ function setupNavbar() {
     });
 }
 
-// Mobile menu toggle
 function setupMobileMenu() {
     const mobileMenuToggle = document.getElementById('mobileMenuToggle');
     const mobileSearchIcon = document.getElementById('mobileSearchIcon');
@@ -435,14 +450,12 @@ function setupMobileMenu() {
         });
     }
     
-    // Close menu when clicking outside
     document.addEventListener('click', (e) => {
         if (navMenu && !navMenu.contains(e.target) && mobileMenuToggle && !mobileMenuToggle.contains(e.target)) {
             navMenu.classList.remove('active');
         }
     });
     
-    // Close menu when clicking a link
     if (navMenu) {
         const navLinks = navMenu.querySelectorAll('.nav-link');
         navLinks.forEach(link => {
@@ -453,14 +466,12 @@ function setupMobileMenu() {
     }
 }
 
-// Watchlist Modal functionality
 function setupWatchlistModal() {
     const watchlistBtn = document.getElementById('watchlistBtn');
     const watchlistModal = document.getElementById('watchlistModal');
     const watchlistModalClose = document.getElementById('watchlistModalClose');
     const watchlistGrid = document.getElementById('watchlistGrid');
     
-    // Open watchlist modal
     if (watchlistBtn) {
         watchlistBtn.addEventListener('click', async () => {
             if (!Auth.isLoggedIn()) {
@@ -468,10 +479,7 @@ function setupWatchlistModal() {
                 return;
             }
             
-            // Show modal
             watchlistModal.classList.add('show');
-            
-            // Load watchlist
             watchlistGrid.innerHTML = '<div class="loading-message">Loading your watchlist...</div>';
             
             try {
@@ -490,7 +498,6 @@ function setupWatchlistModal() {
                     return;
                 }
                 
-                // Match with local data
                 const watchlistItems = DataManager.getByIds(watchlistIds);
                 
                 if (watchlistItems.length === 0) {
@@ -521,14 +528,12 @@ function setupWatchlistModal() {
         });
     }
     
-    // Close watchlist modal
     if (watchlistModalClose) {
         watchlistModalClose.addEventListener('click', () => {
             watchlistModal.classList.remove('show');
         });
     }
     
-    // Close on background click
     if (watchlistModal) {
         watchlistModal.addEventListener('click', (e) => {
             if (e.target === watchlistModal) {
@@ -540,17 +545,16 @@ function setupWatchlistModal() {
 
 // Initialize page
 document.addEventListener('DOMContentLoaded', async () => {
-    // Initialize auth
     Auth.initAuthUI();
     Auth.setupModal();
     
-    // Setup features
     setupNavbar();
     setupSearch();
     setupMobileMenu();
     createSearchModal();
     setupWatchlistModal();
+    setupSorting();
+    setupLoadMore();
     
-    // Load and display content
     await loadGenreContent();
 });

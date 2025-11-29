@@ -5,7 +5,7 @@
 //   - Production: 'https://your-backend-domain.com'
 //   - Custom port: 'http://your-domain.com:8001'
 const CONFIG = {
-    API_BASE_URL: 'https://movie-genre-finder-2.preview.emergentagent.com',  // 👈 CHANGE THIS to your backend URL
+    API_BASE_URL: 'https://search-refine.preview.emergentagent.com',  // 👈 CHANGE THIS to your backend URL
     API_ENDPOINTS: {
         // Auth
         LOGIN: '/api/auth/login',

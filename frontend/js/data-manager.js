@@ -354,110 +354,109 @@ const DataManager = {
             .trim();
     },
     
-    // Search content with fuzzy matching and scoring
+    // Search content with strict relevance matching
+    // Only returns results where the query matches title, cast name, director name, or genre
     search(query, limit = 50) {
         if (!query || typeof query !== 'string') return [];
         
         const normalizedQuery = this.normalizeString(query);
-        if (!normalizedQuery) return [];
-        const queryWords = normalizedQuery.split(' ');
+        if (!normalizedQuery || normalizedQuery.length < 2) return [];
+        
+        const queryWords = normalizedQuery.split(' ').filter(w => w.length >= 2);
+        if (queryWords.length === 0) return [];
+        
         const scoredResults = [];
         
         for (const item of this.contentMap.values()) {
             let score = 0;
-            let maxScore = 0;
+            let matchReason = null; // Track why this item matched
             
             // Search in title (highest priority)
             const title = this.normalizeString(item.title || '');
-            const titleSimilarity = this.calculateSimilarity(title, normalizedQuery);
-            if (titleSimilarity > 0.3) {
-                score += titleSimilarity * 10; // Title matches get 10x weight
-                maxScore = Math.max(maxScore, titleSimilarity);
+            
+            // Exact title match
+            if (title === normalizedQuery) {
+                score = 100;
+                matchReason = 'exact_title';
+            } 
+            // Full query is contained in title (e.g. "stranger things" in "Stranger Things Season 1")
+            else if (title.includes(normalizedQuery)) {
+                score = 80;
+                matchReason = 'title_contains_query';
+            }
+            // Check if ALL query words appear in title
+            else {
+                const allWordsInTitle = queryWords.every(word => title.includes(word));
+                if (allWordsInTitle && queryWords.length > 0) {
+                    score = 60;
+                    matchReason = 'all_words_in_title';
+                }
             }
             
-            // Check each query word against title
-            queryWords.forEach(word => {
-                if (title.includes(word)) {
-                    score += 3;
-                }
-            });
-            
-            // Search in genres
-            const genres = Array.isArray(item.genres) ? item.genres : [];
-            genres.forEach(genre => {
-                const genreNorm = this.normalizeString(genre);
-                const genreSimilarity = this.calculateSimilarity(genreNorm, normalizedQuery);
-                if (genreSimilarity > 0.5) {
-                    score += genreSimilarity * 5; // Genre matches get 5x weight
-                    maxScore = Math.max(maxScore, genreSimilarity);
-                }
-                
-                // Check if genre contains any query word
-                queryWords.forEach(word => {
-                    if (genreNorm.includes(word)) {
-                        score += 2;
+            // If no title match, check cast (for actor name searches)
+            if (!matchReason) {
+                const cast = Array.isArray(item.cast) ? item.cast : [];
+                for (const actor of cast) {
+                    const actorNorm = this.normalizeString(actor);
+                    // Full query matches actor name or vice versa
+                    if (actorNorm.includes(normalizedQuery) || normalizedQuery.includes(actorNorm)) {
+                        score = 40;
+                        matchReason = 'cast_match';
+                        break;
                     }
-                });
-            });
-            
-            // Search in director
-            if (item.director) {
-                const director = this.normalizeString(item.director);
-                const directorSimilarity = this.calculateSimilarity(director, normalizedQuery);
-                if (directorSimilarity > 0.5) {
-                    score += directorSimilarity * 4; // Director matches get 4x weight
-                    maxScore = Math.max(maxScore, directorSimilarity);
-                }
-                
-                queryWords.forEach(word => {
-                    if (director.includes(word)) {
-                        score += 2;
+                    // All query words appear in actor name
+                    const allWordsInActor = queryWords.every(word => actorNorm.includes(word));
+                    if (allWordsInActor && queryWords.length > 0) {
+                        score = 35;
+                        matchReason = 'cast_words_match';
+                        break;
                     }
-                });
+                }
             }
             
-            // Search in cast
-            const cast = Array.isArray(item.cast) ? item.cast : [];
-            cast.forEach(actor => {
-                const actorNorm = this.normalizeString(actor);
-                const actorSimilarity = this.calculateSimilarity(actorNorm, normalizedQuery);
-                if (actorSimilarity > 0.5) {
-                    score += actorSimilarity * 3; // Cast matches get 3x weight
-                    maxScore = Math.max(maxScore, actorSimilarity);
+            // If no cast match, check director
+            if (!matchReason && item.director) {
+                const director = this.normalizeString(
+                    Array.isArray(item.director) ? item.director.join(' ') : item.director
+                );
+                if (director.includes(normalizedQuery) || normalizedQuery.includes(director)) {
+                    score = 35;
+                    matchReason = 'director_match';
                 }
-                
-                queryWords.forEach(word => {
-                    if (actorNorm.includes(word)) {
-                        score += 1.5;
+                // All query words in director name
+                const allWordsInDirector = queryWords.every(word => director.includes(word));
+                if (allWordsInDirector && queryWords.length > 0) {
+                    score = 30;
+                    matchReason = 'director_words_match';
+                }
+            }
+            
+            // If no person match, check genre (exact match only)
+            if (!matchReason) {
+                const genres = Array.isArray(item.genres) ? item.genres : [];
+                for (const genre of genres) {
+                    const genreNorm = this.normalizeString(genre);
+                    // Query exactly matches a genre
+                    if (genreNorm === normalizedQuery) {
+                        score = 25;
+                        matchReason = 'genre_exact';
+                        break;
                     }
-                });
-            });
-            
-            // Search in description (lower priority)
-            const description = this.normalizeString(item.description || '');
-            queryWords.forEach(word => {
-                if (description.includes(word)) {
-                    score += 0.5; // Description matches get lower weight
                 }
-            });
+            }
             
-            // If there's any score, add to results
-            if (score > 0) {
+            // Only include if we found a valid match reason
+            if (matchReason && score > 0) {
                 scoredResults.push({
                     item: item,
                     score: score,
-                    maxSimilarity: maxScore
+                    reason: matchReason
                 });
             }
         }
         
-        // Sort by score (highest first), then by max similarity
-        scoredResults.sort((a, b) => {
-            if (Math.abs(b.score - a.score) > 0.1) {
-                return b.score - a.score;
-            }
-            return b.maxSimilarity - a.maxSimilarity;
-        });
+        // Sort by score (highest first)
+        scoredResults.sort((a, b) => b.score - a.score);
         
         // Return top results
         return scoredResults.slice(0, limit).map(r => r.item);

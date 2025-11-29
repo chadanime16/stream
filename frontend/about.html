@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About - Chadcinema</title>
+    <link rel="stylesheet" href="css/main.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <a href="index.html"><h1>Chadcinema</h1></a>
+            </div>
+            <div class="nav-search">
+                <input type="text" id="searchInput" placeholder="Search movies, series, anime..." class="search-input">
+                <button class="search-btn" id="searchBtn">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <path d="m21 21-4.35-4.35"></path>
+                    </svg>
+                </button>
+            </div>
+            <button class="mobile-search-icon" id="mobileSearchIcon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <path d="m21 21-4.35-4.35"></path>
+                </svg>
+            </button>
+           
+            <button class="mobile-menu-toggle" id="mobileMenuToggle">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="3" y1="12" x2="21" y2="12"></line>
+                    <line x1="3" y1="6" x2="21" y2="6"></line>
+                    <line x1="3" y1="18" x2="21" y2="18"></line>
+                </svg>
+            </button>
+            <div class="nav-menu" id="navMenu">
+                <a href="index.html" class="nav-link">Home</a>
+                <a href="genre.html?type=movie" class="nav-link">Movies</a>
+                <a href="genre.html?type=series" class="nav-link">Series</a>
+                <a href="genre.html?type=anime" class="nav-link">Anime</a>
+                <a href="genre.html?genre=drama" class="nav-link">Drama</a>
+                <a href="genre.html?type=cartoon&genre=cartoon" class="nav-link">Cartoon</a>
+                <a href="about.html" class="nav-link active">About</a>
+            </div>
+             <div class="user-menu">
+                <button class="user-btn" id="userBtn">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="12" cy="7" r="4"></circle>
+                    </svg>
+                </button>
+                <div class="user-dropdown" id="userDropdown">
+                    <div class="user-info" id="userInfo" style="display: none;">
+                        <p id="usernameDisplay"></p>
+                        <button class="dropdown-item" id="watchlistBtn">My Watchlist</button>
+                        <button class="dropdown-item" id="logoutBtn">Logout</button>
+                    </div>
+                    <div class="auth-buttons" id="authButtons">
+                        <button class="dropdown-item" id="loginBtn">Login</button>
+                        <button class="dropdown-item" id="signupBtn">Sign Up</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- About Page Content -->
+    <main class="about-page">
+        <!-- Hero Section -->
+        <section class="about-hero">
+            <div class="about-hero-content">
+                <h1>About ChadCinema</h1>
+                <p class="about-intro">
+                    Umm won't say huge words but this started as a hobby project now it's a full fledged site, won't say the perfect site but decent enough considering you don't have to pay a penny! We do provide features that your paid subscriptions don't have. Guess... can't guess? It's <strong>request a movie or series feature!</strong> You request and we present it to you within 24 hours!
+                </p>
+                <div class="about-email-highlight">
+                    <span class="email-icon">📧</span>
+                    <span>Mail us at <a href="mailto:chadcinema@bugfoo.com">chadcinema@bugfoo.com</a> your requested movie with IMDb link.</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Info Cards Section -->
+        <section class="about-cards">
+            <div class="about-card">
+                <div class="about-card-icon">💡</div>
+                <h2>Words of Wisdom</h2>
+                <p>Those who are new to this platform just see the video below and you will understand how the site works.</p>
+                
+                <!-- Video Placeholder -->
+                <div class="video-placeholder">
+                    <div class="video-icon">▶️</div>
+                    <p>Tutorial Video Coming Soon</p>
+                </div>
+                
+                <div class="warning-box">
+                    <span class="warning-icon">⚠️</span>
+                    <p><strong>Don't signup using your primary email</strong> (the one you use in banking and other official places) not because we sell it or anything but to protect your privacy, we just take your email to let you know about the updates and other things. That's it!</p>
+                </div>
+            </div>
+
+            <div class="about-card">
+                <div class="about-card-icon">🎬</div>
+                <h2>What We Offer</h2>
+                <p>Our platform features an extensive library of content including:</p>
+                <ul class="offer-list">
+                    <li>🎥 Hollywood blockbusters</li>
+                    <li>🎭 Bollywood hits</li>
+                    <li>🎪 South Indian cinema</li>
+                    <li>🇰🇷 Korean dramas</li>
+                    <li>📺 Popular TV series</li>
+                    <li>🎨 Animated content for all ages</li>
+                </ul>
+                <div class="share-cta">
+                    <p><strong>Share this with your friends and support the project!</strong></p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Scraping Policy Section -->
+        <section class="about-section policy-section">
+            <div class="section-header">
+                <span class="section-icon">📜</span>
+                <h2>Scraping Policy & Documentation Access</h2>
+            </div>
+            <div class="policy-content">
+                <p>If you want access to scraping data, please contact us via email at <a href="mailto:chadcinema@bugfoo.com">chadcinema@bugfoo.com</a>. Upon approval, you will be provided with a dedicated domain and proper documentation for scraping.</p>
+                
+                <div class="warning-banner">
+                    <span class="warning-icon">🚫</span>
+                    <div>
+                        <strong>Note:</strong> Do not scrape chadcinema.22web.org directly. This is strictly prohibited and may result in a <strong>permanent ban</strong>.
+                    </div>
+                </div>
+                
+                <p class="policy-note">To report dead links or request new content, use the same email: <a href="mailto:chadcinema@bugfoo.com">chadcinema@bugfoo.com</a></p>
+            </div>
+        </section>
+
+        <!-- Support Section -->
+        <section class="about-section support-section">
+            <div class="section-header">
+                <span class="section-icon">💖</span>
+                <h2>Support Us</h2>
+            </div>
+            <div class="support-content">
+                <p class="support-intro">Those who hold crypto but can't use can give it to us 👀. If in any other way you want to support this site mail us.</p>
+                <p class="support-subtitle">You can donate to the following crypto addresses:</p>
+                
+                <div class="crypto-grid">
+                    <div class="crypto-card">
+                        <div class="crypto-header">
+                            <span class="crypto-icon">₿</span>
+                            <span class="crypto-name">Bitcoin (BTC)</span>
+                        </div>
+                        <div class="crypto-address">
+                            <code>bc1qktz2m8l67uspqqn72epq54y8ysc0c77fv3wcfg</code>
+                            <button class="copy-btn" onclick="copyAddress(this, 'bc1qktz2m8l67uspqqn72epq54y8ysc0c77fv3wcfg')">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="crypto-card">
+                        <div class="crypto-header">
+                            <span class="crypto-icon">Ξ</span>
+                            <span class="crypto-name">Ethereum (ETH)</span>
+                        </div>
+                        <div class="crypto-address">
+                            <code>0xD7eBf41603f0d98aaA094A71602a501C2D09955f</code>
+                            <button class="copy-btn" onclick="copyAddress(this, '0xD7eBf41603f0d98aaA094A71602a501C2D09955f')">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="crypto-card">
+                        <div class="crypto-header">
+                            <span class="crypto-icon">₮</span>
+                            <span class="crypto-name">USDT (TRC20)</span>
+                        </div>
+                        <div class="crypto-address">
+                            <code>TRzNrwfD27X7khiyqBXg2E5xX4gkYkNdcE</code>
+                            <button class="copy-btn" onclick="copyAddress(this, 'TRzNrwfD27X7khiyqBXg2E5xX4gkYkNdcE')">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="crypto-card">
+                        <div class="crypto-header">
+                            <span class="crypto-icon">◎</span>
+                            <span class="crypto-name">Solana (SOL)</span>
+                        </div>
+                        <div class="crypto-address">
+                            <code>39AsXvnz18jng6SWY7WoCr68xshsTGnUSnfb9vttPgKa</code>
+                            <button class="copy-btn" onclick="copyAddress(this, '39AsXvnz18jng6SWY7WoCr68xshsTGnUSnfb9vttPgKa')">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="crypto-card">
+                        <div class="crypto-header">
+                            <span class="crypto-icon">◈</span>
+                            <span class="crypto-name">Tron (TRX)</span>
+                        </div>
+                        <div class="crypto-address">
+                            <code>TRzNrwfD27X7khiyqBXg2E5xX4gkYkNdcE</code>
+                            <button class="copy-btn" onclick="copyAddress(this, 'TRzNrwfD27X7khiyqBXg2E5xX4gkYkNdcE')">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="crypto-card">
+                        <div class="crypto-header">
+                            <span class="crypto-icon">Ł</span>
+                            <span class="crypto-name">Litecoin (LTC)</span>
+                        </div>
+                        <div class="crypto-address">
+                            <code>ltc1qz944l0y6pur59hp0ruudjlcjqyhmkhh3lk0l99</code>
+                            <button class="copy-btn" onclick="copyAddress(this, 'ltc1qz944l0y6pur59hp0ruudjlcjqyhmkhh3lk0l99')">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="crypto-card">
+                        <div class="crypto-header">
+                            <span class="crypto-icon">⬡</span>
+                            <span class="crypto-name">Polygon (POL)</span>
+                        </div>
+                        <div class="crypto-address">
+                            <code>0xD7eBf41603f0d98aaA094A71602a501C2D09955f</code>
+                            <button class="copy-btn" onclick="copyAddress(this, '0xD7eBf41603f0d98aaA094A71602a501C2D09955f')">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <p class="crypto-note">We accept more types of Crypto too. Just contact us on the above given email.</p>
+            </div>
+        </section>
+
+        <!-- Footer Note -->
+        <section class="about-footer">
+            <p>Made with ❤️ for movie lovers everywhere</p>
+        </section>
+    </main>
+
+    <!-- Auth Modal -->
+    <div class="modal" id="authModal">
+        <div class="modal-content">
+            <button class="modal-close" id="modalClose">&times;</button>
+            
+            <!-- Login Form -->
+            <div class="auth-form" id="loginForm">
+                <h2>Welcome Back</h2>
+                <p class="auth-subtitle">Login to continue watching</p>
+                <form id="loginFormElement">
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" id="loginEmail" required>
+                    </div>
+                    <div class="form-group">
+                        <label>PIN</label>
+                        <input type="password" id="loginPin" maxlength="6" required>
+                    </div>
+                    <div class="error-message" id="loginError"></div>
+                    <button type="submit" class="btn btn-primary btn-full">Login</button>
+                </form>
+                <p class="auth-switch">
+                    Don't have an account? 
+                    <a href="#" id="showSignup">Sign Up</a>
+                </p>
+            </div>
+
+            <!-- Signup Form -->
+            <div class="auth-form" id="signupForm" style="display: none;">
+                <h2>Join Chadcinema</h2>
+                <p class="auth-subtitle">Create an account to start watching</p>
+                <form id="signupFormElement">
+                    <div class="form-group">
+                        <label>Choose Your Avatar</label>
+                        <div class="profile-image-picker" id="profileImagePicker"></div>
+                    </div>
+                    <div class="form-group">
+                        <label>Username</label>
+                        <input type="text" id="signupUsername" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" id="signupEmail" required>
+                    </div>
+                    <div class="form-group">
+                        <label>6-Digit PIN</label>
+                        <input type="password" id="signupPin" maxlength="6" pattern="[0-9]{6}" required>
+                    </div>
+                    <div class="error-message" id="signupError"></div>
+                    <button type="submit" class="btn btn-primary btn-full">Sign Up</button>
+                </form>
+                <p class="auth-switch">
+                    Already have an account? 
+                    <a href="#" id="showLogin">Login</a>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search Modal -->
+    <div class="search-modal" id="searchModal">
+        <div class="search-modal-header">
+            <input type="text" id="searchModalInput" placeholder="Search movies, series, anime..." class="search-modal-input">
+            <button class="search-modal-close" id="searchModalClose">&times;</button>
+        </div>
+        <div class="search-modal-content">
+            <div class="search-results-grid" id="searchResults"></div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div class="toast" id="toast"></div>
+
+    <script src="js/config.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/profile-images.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/data-manager.js"></script>
+    <script>
+        // Copy address function
+        function copyAddress(btn, address) {
+            navigator.clipboard.writeText(address).then(() => {
+                const originalContent = btn.innerHTML;
+                btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>';
+                btn.classList.add('copied');
+                setTimeout(() => {
+                    btn.innerHTML = originalContent;
+                    btn.classList.remove('copied');
+                }, 2000);
+            });
+        }
+
+        // Setup search modal
+        let searchTimeout = null;
+        
+        function createSearchModal() {
+            const modal = document.getElementById('searchModal');
+            const searchModalInput = document.getElementById('searchModalInput');
+            const searchModalClose = document.getElementById('searchModalClose');
+            
+            searchModalClose.onclick = () => {
+                modal.classList.remove('show');
+                searchModalInput.value = '';
+                document.getElementById('searchResults').innerHTML = '';
+            };
+            
+            modal.onclick = (e) => {
+                if (e.target === modal) {
+                    modal.classList.remove('show');
+                    searchModalInput.value = '';
+                    document.getElementById('searchResults').innerHTML = '';
+                }
+            };
+            
+            searchModalInput.addEventListener('input', (e) => {
+                if (searchTimeout) clearTimeout(searchTimeout);
+                
+                searchTimeout = setTimeout(async () => {
+                    const query = searchModalInput.value.trim();
+                    if (!query) {
+                        document.getElementById('searchResults').innerHTML = '';
+                        return;
+                    }
+                    
+                    try {
+                        await DataManager.loadAllData();
+                        const results = DataManager.search(query);
+                        displaySearchResults(results);
+                    } catch (error) {
+                        console.error('Search error:', error);
+                    }
+                }, 300);
+            });
+        }
+
+        function displaySearchResults(results) {
+            const resultsContainer = document.getElementById('searchResults');
+            resultsContainer.innerHTML = '';
+            
+            if (results.length === 0) {
+                resultsContainer.innerHTML = '<p style="color: var(--text-muted); text-align: center; padding: 2rem;">No results found</p>';
+                return;
+            }
+            
+            results.forEach(content => {
+                const card = document.createElement('div');
+                card.className = 'content-card';
+                card.onclick = () => { window.location.href = `detail.html?id=${content.id}`; };
+                card.innerHTML = `
+                    ${content.rating ? `<div class="content-card-rating">⭐ ${content.rating}</div>` : ''}
+                    <img src="${content.image || ''}" alt="${content.title}" class="content-card-image" 
+                         onerror="this.style.background='var(--bg-tertiary)'">
+                    <div class="content-card-info">
+                        <h4 class="content-card-title">${content.title}</h4>
+                        <div class="content-card-meta">
+                            ${content.year ? `<span>${content.year}</span>` : ''}
+                        </div>
+                    </div>
+                `;
+                resultsContainer.appendChild(card);
+            });
+        }
+
+        function setupSearch() {
+            const searchInput = document.getElementById('searchInput');
+            const searchBtn = document.getElementById('searchBtn');
+            const searchModal = document.getElementById('searchModal');
+            const searchModalInput = document.getElementById('searchModalInput');
+            
+            function openSearch() {
+                searchModal.classList.add('show');
+                searchModalInput.focus();
+            }
+            
+            if (searchInput) searchInput.addEventListener('click', openSearch);
+            if (searchBtn) searchBtn.addEventListener('click', openSearch);
+        }
+
+        function setupNavbar() {
+            const navbar = document.querySelector('.navbar');
+            window.addEventListener('scroll', () => {
+                if (window.scrollY > 100) {
+                    navbar.classList.add('scrolled');
+                } else {
+                    navbar.classList.remove('scrolled');
+                }
+            });
+        }
+
+        function setupMobileMenu() {
+            const mobileMenuToggle = document.getElementById('mobileMenuToggle');
+            const mobileSearchIcon = document.getElementById('mobileSearchIcon');
+            const navMenu = document.getElementById('navMenu');
+            const searchModal = document.getElementById('searchModal');
+            const searchModalInput = document.getElementById('searchModalInput');
+            
+            if (mobileMenuToggle && navMenu) {
+                mobileMenuToggle.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    navMenu.classList.toggle('active');
+                });
+            }
+            
+            if (mobileSearchIcon && searchModal && searchModalInput) {
+                mobileSearchIcon.addEventListener('click', () => {
+                    searchModal.classList.add('show');
+                    searchModalInput.focus();
+                });
+            }
+            
+            document.addEventListener('click', (e) => {
+                if (navMenu && !navMenu.contains(e.target) && mobileMenuToggle && !mobileMenuToggle.contains(e.target)) {
+                    navMenu.classList.remove('active');
+                }
+            });
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', async () => {
+            Auth.initAuthUI();
+            Auth.setupModal();
+            setupNavbar();
+            setupSearch();
+            setupMobileMenu();
+            createSearchModal();
+        });
+    </script>
+</body>
+</html>
