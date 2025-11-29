@@ -5,7 +5,7 @@ const DataManager = {
     loadPromise: null,
     STORAGE_KEY: 'chadcinema_content_cache',
     VERSION_KEY: 'chadcinema_cache_version',
-    CURRENT_VERSION: '1.0', // Increment this when backend JSON changes
+    CURRENT_VERSION: '1.2', // Increment this when backend JSON changes
     
     // List of JSON files to load
     jsonFiles: [
@@ -133,10 +133,16 @@ const DataManager = {
     },
     
     // Filter content by category/industry
+    // Filter content by category/industry - specifically for Anime section
     getByCategory(category, limit = 50) {
         const results = [];
+        const categoryLower = (category || '').toLowerCase();
+        
         for (const item of this.contentMap.values()) {
-            if (item.industry === category || item.type === category) {
+            const itemIndustry = (item.industry || '').toLowerCase();
+            const itemType = (item.type || '').toLowerCase();
+            
+            if (itemIndustry === categoryLower || itemType === categoryLower) {
                 results.push(item);
                 if (results.length >= limit) break;
             }
@@ -147,14 +153,35 @@ const DataManager = {
     // Advanced filter: by type, industry, and genre (case-insensitive)
     getByFilter(filters = {}, limit = 50) {
         const results = [];
-        const { type, industry, genre, industries, genres } = filters;
+        const { type, industry, genre, industries, genres, excludeAnimeCartoon = true } = filters;
         
         for (const item of this.contentMap.values()) {
             let match = true;
             
+            const itemType = (item.type || '').toLowerCase();
+            const itemIndustry = (item.industry || '').toLowerCase();
+            const itemGenres = Array.isArray(item.genres) ? item.genres : [];
+            const itemGenresLower = itemGenres.map(g => (g || '').toLowerCase());
+            
+            // Exclude anime and cartoon content from regular filters (unless specifically requesting them)
+            if (excludeAnimeCartoon) {
+                // Skip if type is anime or cartoon
+                if (itemType === 'anime' || itemType === 'cartoon') {
+                    continue;
+                }
+                // Skip if industry is Animation (for cartoons/animated movies in other sections)
+                // But allow if we're specifically filtering for Animation industry
+                if (itemIndustry === 'animation' && industry?.toLowerCase() !== 'animation') {
+                    continue;
+                }
+                // Skip if has Cartoon genre (unless specifically looking for it)
+                if (itemGenresLower.includes('cartoon') && genre?.toLowerCase() !== 'cartoon') {
+                    continue;
+                }
+            }
+            
             // Check type (case-insensitive)
             if (type) {
-                const itemType = (item.type || '').toLowerCase();
                 if (itemType !== type.toLowerCase()) {
                     match = false;
                 }
@@ -162,7 +189,6 @@ const DataManager = {
             
             // Check industry (case-insensitive)
             if (industry) {
-                const itemIndustry = (item.industry || '').toLowerCase();
                 if (itemIndustry !== industry.toLowerCase()) {
                     match = false;
                 }
@@ -170,7 +196,6 @@ const DataManager = {
             
             // Check multiple industries (OR logic, case-insensitive)
             if (industries && industries.length > 0) {
-                const itemIndustry = (item.industry || '').toLowerCase();
                 const matchesAnyIndustry = industries.some(ind => 
                     itemIndustry === ind.toLowerCase()
                 );
@@ -181,9 +206,8 @@ const DataManager = {
             
             // Check genre (item.genres is an array, case-insensitive)
             if (genre) {
-                const itemGenres = Array.isArray(item.genres) ? item.genres : [];
-                const hasGenre = itemGenres.some(g => 
-                    (g || '').toLowerCase() === genre.toLowerCase()
+                const hasGenre = itemGenresLower.some(g => 
+                    g === genre.toLowerCase()
                 );
                 if (!hasGenre) {
                     match = false;
@@ -192,9 +216,8 @@ const DataManager = {
             
             // Check multiple genres (OR logic, case-insensitive)
             if (genres && genres.length > 0) {
-                const itemGenres = Array.isArray(item.genres) ? item.genres : [];
                 const hasAnyGenre = genres.some(searchGenre => 
-                    itemGenres.some(g => (g || '').toLowerCase() === searchGenre.toLowerCase())
+                    itemGenresLower.some(g => g === searchGenre.toLowerCase())
                 );
                 if (!hasAnyGenre) {
                     match = false;
@@ -210,28 +233,80 @@ const DataManager = {
         return results;
     },
     
-    // Special filter for Cartoon (series with type cartoon OR movies with cartoon/animation genre)
-    getCartoonContent(limit = 50) {
+    // Special filter for Cartoon (type = cartoon OR genre = Cartoon) - OR condition
+    getCartoonContent(filters = {}, limit = 50) {
         const results = [];
+        const { type, genre } = filters;
+        
+        for (const item of this.contentMap.values()) {
+            const itemType = (item.type || '').toLowerCase();
+            const itemGenres = Array.isArray(item.genres) ? item.genres : [];
+            
+            let match = false;
+            
+            // OR condition: match if type = cartoon OR genre contains Cartoon
+            if (type) {
+                if (itemType === type.toLowerCase()) {
+                    match = true;
+                }
+            }
+            
+            if (genre && !match) {
+                const hasGenre = itemGenres.some(g => 
+                    (g || '').toLowerCase() === genre.toLowerCase()
+                );
+                if (hasGenre) {
+                    match = true;
+                }
+            }
+            
+            if (match) {
+                results.push(item);
+                if (results.length >= limit) break;
+            }
+        }
+        
+        return results;
+    },
+    
+    // Advanced filter with OR logic for genre, industry, and type
+    // Supports: orFilters = { types: [], genres: [], industries: [] }
+    getByOrFilter(filters = {}, limit = 50) {
+        const results = [];
+        const { types, genres, industries } = filters;
         
         for (const item of this.contentMap.values()) {
             const itemType = (item.type || '').toLowerCase();
             const itemIndustry = (item.industry || '').toLowerCase();
             const itemGenres = Array.isArray(item.genres) ? item.genres : [];
-            const hasCartoonGenre = itemGenres.some(g => {
-                const genreLower = (g || '').toLowerCase();
-                return genreLower.includes('cartoon') || 
-                       genreLower.includes('animation') ||
-                       genreLower === 'animated';
-            });
             
-            // Include if:
-            // 1. Type is cartoon (series)
-            // 2. Has cartoon/animation in genre (movies)
-            // 3. Industry is Animation or Cartoon
-            if (itemType === 'cartoon' || 
-                itemIndustry === 'cartoon' ||
-                (itemType === 'movie' && hasCartoonGenre)) {
+            let match = false;
+            
+            // Check types (OR logic)
+            if (types && types.length > 0) {
+                const matchesType = types.some(t => 
+                    itemType === t.toLowerCase()
+                );
+                if (matchesType) match = true;
+            }
+            
+            // Check genres (OR logic)
+            if (genres && genres.length > 0 && !match) {
+                const matchesGenre = genres.some(searchGenre => 
+                    itemGenres.some(g => (g || '').toLowerCase() === searchGenre.toLowerCase())
+                );
+                if (matchesGenre) match = true;
+            }
+            
+            // Check industries (OR logic)
+            if (industries && industries.length > 0 && !match) {
+                const matchesIndustry = industries.some(ind => 
+                    itemIndustry === ind.toLowerCase()
+                );
+                if (matchesIndustry) match = true;
+            }
+            
+            if (match) {
                 results.push(item);
                 if (results.length >= limit) break;
             }
