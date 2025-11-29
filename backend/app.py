@@ -256,6 +256,7 @@ def signup():
         email = data.get('email')
         username = data.get('username')
         pin = data.get('pin')
+        profile_image = data.get('profile_image', '')
         
         if not email or not username or not pin:
             return jsonify({'error': 'Email, username and PIN required'}), 400
@@ -269,9 +270,9 @@ def signup():
         
         hashed_pin = hash_pin(pin)
         cursor.execute('''
-            INSERT INTO users (email, username, pin)
-            VALUES (?, ?, ?)
-        ''', (email, username, hashed_pin))
+            INSERT INTO users (email, username, pin, profile_image)
+            VALUES (?, ?, ?, ?)
+        ''', (email, username, hashed_pin, profile_image))
         
         db.commit()
         return jsonify({'success': True}), 201
@@ -309,7 +310,8 @@ def login():
             'user': {
                 'id': str(user_dict['id']),
                 'username': user_dict['username'],
-                'email': user_dict['email']
+                'email': user_dict['email'],
+                'profile_image': user_dict.get('profile_image', '')
             },
             'token': token
         }), 200
@@ -1059,7 +1061,7 @@ def admin_weekly_editor():
             if (currentUrl.includes('preview.emergentagent.com')) {
                 // Extract the backend URL from the preview pattern
                 // or use a hardcoded preview backend URL
-                return 'https://toon-selector.preview.emergentagent.com';
+                return 'https://movie-genre-finder-2.preview.emergentagent.com';
             }
             // Local development - use relative URLs
             return '';

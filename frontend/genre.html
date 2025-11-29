@@ -29,7 +29,24 @@
                     <path d="m21 21-4.35-4.35"></path>
                 </svg>
             </button>
-            <div class="user-menu">
+           
+            <button class="mobile-menu-toggle" id="mobileMenuToggle">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="3" y1="12" x2="21" y2="12"></line>
+                    <line x1="3" y1="6" x2="21" y2="6"></line>
+                    <line x1="3" y1="18" x2="21" y2="18"></line>
+                </svg>
+            </button>
+            <div class="nav-menu" id="navMenu">
+                <a href="index.html" class="nav-link">Home</a>
+                <a href="genre.html?type=movie" class="nav-link">Movies</a>
+                <a href="genre.html?type=series" class="nav-link">Series</a>
+                <a href="genre.html?type=anime" class="nav-link">Anime</a>
+                <a href="genre.html?genre=drama" class="nav-link">Drama</a>
+                <a href="genre.html?type=cartoon&genre=cartoon" class="nav-link">Cartoon</a>
+                <a href="#" class="nav-link" data-category="about">About</a>
+            </div>
+             <div class="user-menu">
                 <button class="user-btn" id="userBtn">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
@@ -47,22 +64,6 @@
                         <button class="dropdown-item" id="signupBtn">Sign Up</button>
                     </div>
                 </div>
-            </div>
-            <button class="mobile-menu-toggle" id="mobileMenuToggle">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <line x1="3" y1="12" x2="21" y2="12"></line>
-                    <line x1="3" y1="6" x2="21" y2="6"></line>
-                    <line x1="3" y1="18" x2="21" y2="18"></line>
-                </svg>
-            </button>
-            <div class="nav-menu" id="navMenu">
-                <a href="index.html" class="nav-link">Home</a>
-                <a href="genre.html?type=movie" class="nav-link">Movies</a>
-                <a href="genre.html?type=series" class="nav-link">Series</a>
-                <a href="genre.html?type=anime" class="nav-link">Anime</a>
-                <a href="genre.html?genre=drama" class="nav-link">Drama</a>
-                <a href="genre.html?type=cartoon&genre=cartoon" class="nav-link">Cartoon</a>
-                <a href="#" class="nav-link" data-category="about">About</a>
             </div>
         </div>
     </nav>
@@ -121,6 +122,10 @@
                 <p class="auth-subtitle">Create an account to start watching</p>
                 <form id="signupFormElement">
                     <div class="form-group">
+                        <label>Choose Your Avatar</label>
+                        <div class="profile-image-picker" id="profileImagePicker"></div>
+                    </div>
+                    <div class="form-group">
                         <label>Username</label>
                         <input type="text" id="signupUsername" required>
                     </div>
@@ -174,6 +179,7 @@
 
     <script src="js/config.js"></script>
     <script src="js/api.js"></script>
+    <script src="js/profile-images.js"></script>
     <script src="js/auth.js"></script>
     <script src="js/data-manager.js"></script>
     <script src="js/genre.js"></script>

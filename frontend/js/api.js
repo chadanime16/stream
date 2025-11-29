@@ -54,10 +54,10 @@ const API = {
             });
         },
         
-        async signup(username, email, pin) {
+        async signup(username, email, pin, profile_image) {
             return API.request(CONFIG.API_ENDPOINTS.SIGNUP, {
                 method: 'POST',
-                body: JSON.stringify({ username, email, pin })
+                body: JSON.stringify({ username, email, pin, profile_image })
             });
         },
         

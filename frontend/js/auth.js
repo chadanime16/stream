@@ -1,5 +1,8 @@
 // Authentication Manager
 const Auth = {
+    // Selected profile image for signup
+    selectedProfileImage: null,
+    
     // Check if user is logged in
     isLoggedIn() {
         const token = localStorage.getItem(CONFIG.STORAGE_KEYS.TOKEN);
@@ -36,6 +39,25 @@ const Auth = {
         }
     },
     
+    // Update user button with profile image
+    updateProfileButton() {
+        const userBtn = document.getElementById('userBtn');
+        if (!userBtn) return;
+        
+        if (this.isLoggedIn()) {
+            const user = this.getUser();
+            const profileImage = user.profile_image || (typeof PROFILE_IMAGES !== 'undefined' ? PROFILE_IMAGES[0] : null);
+            
+            if (profileImage) {
+                userBtn.innerHTML = `<img src="${profileImage}" alt="Profile" class="user-profile-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none;">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="12" cy="7" r="4"></circle>
+                    </svg>`;
+            }
+        }
+    },
+    
     // Initialize auth UI
     initAuthUI() {
         const userInfo = document.getElementById('userInfo');
@@ -51,6 +73,8 @@ const Auth = {
             if (usernameDisplay) {
                 usernameDisplay.textContent = user.username;
             }
+            // Update profile button with image
+            this.updateProfileButton();
         } else {
             userInfo.style.display = 'none';
             authButtons.style.display = 'block';
@@ -81,6 +105,9 @@ const Auth = {
         const loginForm = document.getElementById('loginForm');
         const signupForm = document.getElementById('signupForm');
         const logoutBtn = document.getElementById('logoutBtn');
+        
+        // Initialize profile image picker
+        this.initProfileImagePicker();
         
         // Show login modal
         if (loginBtn) {
@@ -183,18 +210,61 @@ const Auth = {
                     return;
                 }
                 
+                // Check if profile image is selected
+                if (!this.selectedProfileImage) {
+                    errorEl.textContent = 'Please select a profile picture';
+                    errorEl.classList.add('show');
+                    return;
+                }
+                
                 try {
-                    await API.auth.signup(username, email, pin);
+                    await API.auth.signup(username, email, pin, this.selectedProfileImage);
                     showToast('Account created! Please login.', 'success');
                     signupForm.style.display = 'none';
                     loginForm.style.display = 'block';
                     signupFormElement.reset();
+                    this.selectedProfileImage = null;
+                    this.resetProfileImagePicker();
                 } catch (error) {
                     errorEl.textContent = error.message;
                     errorEl.classList.add('show');
                 }
             });
         }
+    },
+    
+    // Initialize profile image picker
+    initProfileImagePicker() {
+        const pickerContainer = document.getElementById('profileImagePicker');
+        if (!pickerContainer || typeof PROFILE_IMAGES === 'undefined') return;
+        
+        pickerContainer.innerHTML = '';
+        
+        PROFILE_IMAGES.forEach((imageUrl, index) => {
+            const imgWrapper = document.createElement('div');
+            imgWrapper.className = 'profile-image-option';
+            imgWrapper.innerHTML = `<img src="${imageUrl}" alt="Avatar ${index + 1}">`;
+            
+            imgWrapper.addEventListener('click', () => {
+                // Remove selection from all
+                document.querySelectorAll('.profile-image-option').forEach(el => {
+                    el.classList.remove('selected');
+                });
+                // Add selection to clicked
+                imgWrapper.classList.add('selected');
+                this.selectedProfileImage = imageUrl;
+            });
+            
+            pickerContainer.appendChild(imgWrapper);
+        });
+    },
+    
+    // Reset profile image picker
+    resetProfileImagePicker() {
+        document.querySelectorAll('.profile-image-option').forEach(el => {
+            el.classList.remove('selected');
+        });
+        this.selectedProfileImage = null;
     }
 };
 

@@ -57,6 +57,8 @@ function filterContent(params) {
     const isCartoonFilter = types.includes('cartoon') || genres.includes('cartoon');
     // Special handling for anime
     const isAnimeFilter = types.includes('anime') || industries.includes('anime');
+    // Special handling for animation industry filter
+    const isAnimationFilter = industries.includes('animation');
     
     // If no filters, return all
     if (types.length === 0 && industries.length === 0 && genres.length === 0) {
@@ -70,7 +72,31 @@ function filterContent(params) {
         
         // Check if item is anime or cartoon
         const isAnimeContent = itemType === 'anime' || itemIndustry === 'anime';
-        const isCartoonContent = itemType === 'cartoon' || itemGenres.includes('cartoon') || itemIndustry === 'animation';
+        const isCartoonContent = itemType === 'cartoon' || itemGenres.includes('cartoon');
+        const isAnimationContent = itemIndustry === 'animation';
+        
+        // Special animation industry handling - show Animation industry content
+        if (isAnimationFilter) {
+            // Only show animation industry content
+            if (!isAnimationContent) {
+                return false;
+            }
+            // Check type filter if present
+            if (types.length > 0) {
+                const matchesType = types.some(t => 
+                    itemType === t || itemType.includes(t)
+                );
+                if (!matchesType) return false;
+            }
+            // Check genre filter if present
+            if (genres.length > 0) {
+                const matchesGenre = genres.some(searchGenre => 
+                    itemGenres.some(g => g === searchGenre || g.includes(searchGenre))
+                );
+                if (!matchesGenre) return false;
+            }
+            return true;
+        }
         
         // Special anime handling
         if (isAnimeFilter) {
@@ -136,8 +162,8 @@ function filterContent(params) {
             return otherFiltersPass;
         }
         
-        // For regular filters (not anime/cartoon), EXCLUDE anime and cartoon content
-        if (isAnimeContent || isCartoonContent) {
+        // For regular filters (not anime/cartoon/animation), EXCLUDE anime, cartoon, and animation content
+        if (isAnimeContent || isCartoonContent || isAnimationContent) {
             return false;
         }
         
