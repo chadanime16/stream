@@ -9,6 +9,7 @@ let backgroundCtx = null;
 let cells = [];
 let loadedImages = new Map();
 let loadingImages = new Set();
+let imageLoadStats = { loaded: 0, unloaded: 0 };
 
 // View/Pan state
 let viewX = 0;
@@ -40,20 +41,23 @@ let rows = 0;
 
 // Galaxy Configuration
 const GALAXY_CONFIG = {
-    cellWidth: 50,
-    cellHeight: 75,
-    cellGap: 4,
-    loadRadius: 250,
+    cellWidth: 0,  // Will be calculated dynamically to fit screen
+    cellHeight: 0, // Will be calculated dynamically to fit screen
+    cellGap: 2,
+    loadRadius: 150,  // Reduced radius for on-demand loading
+    hoverLoadRadius: 80,  // Tight radius around cursor for dynamic loading
     // Fluid motion
-    waveAmplitude: 12,
+    waveAmplitude: 8,
     waveSpeed: 0.0015,
     waveFrequency: 0.006,
     // Ripple effect
     rippleSpeed: 3,
     rippleDecay: 0.97,
-    rippleStrength: 25,
+    rippleStrength: 15,
     // View smoothing
     viewSmoothing: 0.08,
+    // Aspect ratio for cells (landscape)
+    cellAspectRatio: 1.5,  // width / height (landscape format)
     // Colors for glow
     glowColors: [
         [255, 51, 51],
@@ -177,27 +181,61 @@ function resizeCanvases() {
         movieCanvas.width = w;
         movieCanvas.height = h;
     }
+    
+    // Recalculate grid to fit new viewport size
+    if (allMovies.length > 0 && cells.length > 0) {
+        createAllCells();
+        centerView();
+    }
 }
 
-// Create cells for ALL movies
+// Create cells for ALL movies - FIT TO SCREEN
 function createAllCells() {
     cells = [];
     
     const totalMovies = allMovies.length;
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+    
+    // Calculate optimal grid layout to fit all movies in viewport
+    // Start with square-ish layout but adjust for aspect ratio
+    const targetAspectRatio = 1.5; // Grid wider than tall
+    cols = Math.ceil(Math.sqrt(totalMovies * targetAspectRatio));
+    rows = Math.ceil(totalMovies / cols);
+    
+    // Calculate cell dimensions to fit all cells in viewport
+    // Account for gaps
+    const totalGapWidth = (cols - 1) * GALAXY_CONFIG.cellGap;
+    const totalGapHeight = (rows - 1) * GALAXY_CONFIG.cellGap;
+    const availableWidth = viewportWidth - totalGapWidth;
+    const availableHeight = viewportHeight - totalGapHeight;
+    
+    // Calculate cell size based on landscape aspect ratio
+    // Try fitting by width first
+    let cellWidth = availableWidth / cols;
+    let cellHeight = cellWidth / GALAXY_CONFIG.cellAspectRatio;
+    
+    // If height doesn't fit, recalculate based on height
+    if (cellHeight * rows > availableHeight) {
+        cellHeight = availableHeight / rows;
+        cellWidth = cellHeight * GALAXY_CONFIG.cellAspectRatio;
+    }
+    
+    // Update config with calculated dimensions
+    GALAXY_CONFIG.cellWidth = Math.floor(cellWidth);
+    GALAXY_CONFIG.cellHeight = Math.floor(cellHeight);
+    
     const cellW = GALAXY_CONFIG.cellWidth + GALAXY_CONFIG.cellGap;
     const cellH = GALAXY_CONFIG.cellHeight + GALAXY_CONFIG.cellGap;
     
-    // Calculate grid to fit all movies
-    // Make it roughly square-ish but wider
-    const aspectRatio = 1.5;
-    cols = Math.ceil(Math.sqrt(totalMovies * aspectRatio));
-    rows = Math.ceil(totalMovies / cols);
+    gridWidth = cols * cellW - GALAXY_CONFIG.cellGap;
+    gridHeight = rows * cellH - GALAXY_CONFIG.cellGap;
     
-    gridWidth = cols * cellW;
-    gridHeight = rows * cellH;
-    
+    console.log(`📐 Viewport: ${viewportWidth}x${viewportHeight}px`);
     console.log(`📐 Grid: ${cols}x${rows} = ${cols * rows} cells for ${totalMovies} movies`);
-    console.log(`📐 Grid size: ${gridWidth}x${gridHeight}px`);
+    console.log(`📐 Cell size: ${GALAXY_CONFIG.cellWidth}x${GALAXY_CONFIG.cellHeight}px (landscape)`);
+    console.log(`📐 Grid size: ${gridWidth}x${gridHeight}px - FIT TO SCREEN ✅`);
+    console.log(`🎯 Dynamic Loading: Images load on-demand within ${GALAXY_CONFIG.hoverLoadRadius}px of cursor`);
     
     for (let i = 0; i < totalMovies; i++) {
         const movie = allMovies[i];
@@ -228,14 +266,14 @@ function centerView() {
     const w = window.innerWidth;
     const h = window.innerHeight;
     
-    // Center the grid in the view
-    targetViewX = (gridWidth - w) / 2;
-    targetViewY = (gridHeight - h) / 2;
+    // Center the grid in the view (grid should fit in viewport now)
+    targetViewX = Math.max(0, (gridWidth - w) / 2);
+    targetViewY = Math.max(0, (gridHeight - h) / 2);
     viewX = targetViewX;
     viewY = targetViewY;
 }
 
-// Load image
+// Load image dynamically
 function loadCellImage(cell) {
     if (!cell.movie || !cell.movie.image) return;
     
@@ -256,11 +294,20 @@ function loadCellImage(cell) {
         loadedImages.set(imageUrl, img);
         loadingImages.delete(imageUrl);
         cell.imageLoaded = true;
+        imageLoadStats.loaded++;
     };
     img.onerror = () => {
         loadingImages.delete(imageUrl);
     };
     img.src = imageUrl;
+}
+
+// No cleanup - once loaded, images stay loaded for smooth experience
+// This provides better UX as users explore the galaxy
+function cleanupDistantImages() {
+    // Disabled - images stay loaded once they're loaded
+    // This saves re-downloading when user moves cursor back
+    return;
 }
 
 // Add ripple at position
@@ -384,13 +431,14 @@ function drawCells() {
             return;
         }
         
-        // Fluid wave motion
-        const waveX = Math.sin(time * GALAXY_CONFIG.waveSpeed + cell.baseY * GALAXY_CONFIG.waveFrequency + cell.phaseX) * GALAXY_CONFIG.waveAmplitude;
-        const waveY = Math.cos(time * GALAXY_CONFIG.waveSpeed * 0.8 + cell.baseX * GALAXY_CONFIG.waveFrequency + cell.phaseY) * GALAXY_CONFIG.waveAmplitude;
+        // Fluid wave motion - scaled based on cell size
+        const waveScale = Math.min(1, GALAXY_CONFIG.cellWidth / 30);
+        const waveX = Math.sin(time * GALAXY_CONFIG.waveSpeed + cell.baseY * GALAXY_CONFIG.waveFrequency + cell.phaseX) * GALAXY_CONFIG.waveAmplitude * waveScale;
+        const waveY = Math.cos(time * GALAXY_CONFIG.waveSpeed * 0.8 + cell.baseX * GALAXY_CONFIG.waveFrequency + cell.phaseY) * GALAXY_CONFIG.waveAmplitude * waveScale;
         
         // Secondary wave for more organic motion
-        const wave2X = Math.sin(time * GALAXY_CONFIG.waveSpeed * 1.3 + cell.baseX * 0.004 + cell.phase) * (GALAXY_CONFIG.waveAmplitude * 0.5);
-        const wave2Y = Math.cos(time * GALAXY_CONFIG.waveSpeed * 1.1 + cell.baseY * 0.004 + cell.phase) * (GALAXY_CONFIG.waveAmplitude * 0.5);
+        const wave2X = Math.sin(time * GALAXY_CONFIG.waveSpeed * 1.3 + cell.baseX * 0.004 + cell.phase) * (GALAXY_CONFIG.waveAmplitude * 0.5 * waveScale);
+        const wave2Y = Math.cos(time * GALAXY_CONFIG.waveSpeed * 1.1 + cell.baseY * 0.004 + cell.phase) * (GALAXY_CONFIG.waveAmplitude * 0.5 * waveScale);
         
         // Ripple displacement
         const ripple = getRippleDisplacement(cell.baseX, cell.baseY);
@@ -420,8 +468,10 @@ function drawCells() {
             }
         }
         
-        // Load image if near mouse
-        if (distToMouse < GALAXY_CONFIG.loadRadius) {
+        // Dynamic on-demand image loading - only when cursor is near
+        // This saves bandwidth and device resources
+        const isNearCursor = distToMouse < GALAXY_CONFIG.hoverLoadRadius;
+        if (isNearCursor) {
             loadCellImage(cell);
         }
         
@@ -433,7 +483,7 @@ function drawCells() {
 }
 
 function drawCell(ctx, cell, screenX, screenY, distToMouse) {
-    const isNearMouse = distToMouse < GALAXY_CONFIG.loadRadius;
+    const isNearMouse = distToMouse < GALAXY_CONFIG.hoverLoadRadius;
     const isHovered = cell === hoveredCell;
     
     // Scale based on proximity and hover
@@ -441,7 +491,7 @@ function drawCell(ctx, cell, screenX, screenY, distToMouse) {
     if (isHovered) {
         scale = 1.4;
     } else if (isNearMouse) {
-        scale = 1 + (1 - distToMouse / GALAXY_CONFIG.loadRadius) * 0.2;
+        scale = 1 + (1 - distToMouse / GALAXY_CONFIG.hoverLoadRadius) * 0.2;
     }
     
     const scaledW = cell.width * scale;
@@ -526,7 +576,8 @@ function updateHoverState() {
             previewImg.src = movie.image;
             preview.classList.add('visible');
             
-            const pw = 180, ph = 270, pad = 20;
+            // Landscape preview dimensions
+            const pw = 320, ph = 180, pad = 20;
             let px = mouseX + pad;
             let py = mouseY - ph / 2;
             
@@ -582,16 +633,22 @@ function startAnimation() {
         viewX += (targetViewX - viewX) * GALAXY_CONFIG.viewSmoothing;
         viewY += (targetViewY - viewY) * GALAXY_CONFIG.viewSmoothing;
         
-        // Clamp view
+        // Clamp view - grid should fit in viewport now, so minimal panning
         const w = window.innerWidth;
         const h = window.innerHeight;
-        viewX = Math.max(0, Math.min(gridWidth - w, viewX));
-        viewY = Math.max(0, Math.min(gridHeight - h, viewY));
-        targetViewX = Math.max(0, Math.min(gridWidth - w, targetViewX));
-        targetViewY = Math.max(0, Math.min(gridHeight - h, targetViewY));
+        const maxViewX = Math.max(0, gridWidth - w);
+        const maxViewY = Math.max(0, gridHeight - h);
+        
+        viewX = Math.max(0, Math.min(maxViewX, viewX));
+        viewY = Math.max(0, Math.min(maxViewY, viewY));
+        targetViewX = Math.max(0, Math.min(maxViewX, targetViewX));
+        targetViewY = Math.max(0, Math.min(maxViewY, targetViewY));
         
         // Update ripples
         updateRipples();
+        
+        // Cleanup distant images to save memory
+        cleanupDistantImages();
         
         drawBackground();
         drawCells();

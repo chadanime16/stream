@@ -54,7 +54,7 @@ html, body {
     cursor: grabbing;
 }
 
-/* Hover Preview */
+/* Hover Preview - LANDSCAPE FORMAT */
 .hover-preview {
     position: fixed;
     pointer-events: none;
@@ -70,8 +70,8 @@ html, body {
 }
 
 .hover-preview img {
-    width: 180px;
-    height: 270px;
+    width: 320px;
+    height: 180px;
     object-fit: cover;
     border-radius: 10px;
     box-shadow: 
@@ -289,8 +289,8 @@ html, body {
     }
     
     .hover-preview img {
-        width: 140px;
-        height: 210px;
+        width: 240px;
+        height: 135px;
     }
     
     .control-icon {
