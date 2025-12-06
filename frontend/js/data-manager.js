@@ -1,5 +1,5 @@
 // Data Manager - Loads and caches all JSON data with localStorage
-const DataManager = {
+window.DataManager = {
     contentMap: new Map(),
     isLoaded: false,
     loadPromise: null,
